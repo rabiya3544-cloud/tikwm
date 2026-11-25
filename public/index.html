@@ -244,13 +244,33 @@
     justify-content: center;
   }
   .modal .close:hover { background: rgba(255,255,255,0.22); }
+  header .nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  header .icon-btn {
+    font-size: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 7px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--panel);
+  }
+  header .icon-btn:hover { color: var(--text); border-color: var(--muted); }
 </style>
 </head>
 <body>
   <div class="app">
     <header>
       <h1>TikWM Proxy</h1>
-      <span class="tag">v1</span>
+      <div class="nav">
+        <span class="tag">v1</span>
+        <a class="icon-btn" href="/response.html">Response</a>
+      </div>
     </header>
 
     <form id="form" autocomplete="off">
