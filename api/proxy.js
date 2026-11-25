@@ -35,7 +35,7 @@ export default async function handler(req, res) {
       return;
     }
 
-    const encodedId = encodeURIComponent(unique_id);
+    const encodedId = encodeURIComponent(decodeURIComponent(unique_id));
     const baseUrl   = ENDPOINT_MAP[endpoint];
     const params    = new URLSearchParams();
 
