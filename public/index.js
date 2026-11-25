@@ -163,7 +163,7 @@
         allFetchedVideos.push(v);
       }
       if (!append) {
-        renderProfile(videos.length ? videos[0].author : null);
+        renderProfile(videos.length ? videos[0].author : null, videos.length ? videos[0].region : null);
       }
 
       state.params = params;
