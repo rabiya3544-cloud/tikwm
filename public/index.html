@@ -492,7 +492,7 @@
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href = url;
-    a.download = `responses_${Date.now()}.json`;
+    a.download = `${($('#unique_id').value.trim().replace(/^@/, '') || 'responses')}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
