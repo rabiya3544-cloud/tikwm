@@ -414,3 +414,10 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+.profile-flag {
+    margin-left: auto;
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .profile-flag:empty { display: none; }
