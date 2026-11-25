@@ -673,7 +673,30 @@
       updateDebug();
     }
   }
+function renderProfile(author) {
+    const card = document.getElementById('profileCard');
+    if (!author || !author.unique_id) {
+      card.hidden = true;
+      return;
+    }
+    const avatarEl = document.getElementById('profileAvatar');
+    const nickEl   = document.getElementById('profileNickname');
+    const uidEl    = document.getElementById('profileUnique');
 
+    nickEl.textContent = author.nickname || '';
+    uidEl.textContent  = '@' + (author.unique_id || '');
+
+    const avatarUrl = fix(author.avatar || '');
+    if (avatarUrl) {
+      avatarEl.src = avatarUrl;
+      avatarEl.onerror = () => { avatarEl.style.opacity = '0.15'; };
+      avatarEl.style.opacity = '';
+    } else {
+      avatarEl.removeAttribute('src');
+    }
+
+    card.hidden = false;
+  }
   function render(videos, append) {
     const html = videos.map((v) => {
       const isPhoto = Array.isArray(v.images) && v.images.length > 0;
