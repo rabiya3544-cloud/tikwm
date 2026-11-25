@@ -499,18 +499,20 @@
 (() => {
   const PROXY = '/api/proxy';
   const MEDIA = '/api/media?path=';
-  const $ = (s) => document.querySelector(s);
+  const $ = function (s) {
+    return document.querySelector(s);
+  };
 
-  const form        = $('#form');
+  const form = $('#form');
   const endpointSel = $('#endpoint');
   const keywordsFld = $('#keywordsField');
-  const submitBtn   = $('#submitBtn');
-  const statusEl    = $('#status');
-  const resultsEl   = $('#results');
+  const submitBtn = $('#submitBtn');
+  const statusEl = $('#status');
+  const resultsEl = $('#results');
   const loadMoreBtn = $('#loadMore');
-  const debugEl     = $('#debug');
-  const modal       = $('#playerModal');
-  const player      = $('#player');
+  const debugEl = $('#debug');
+  const modal = $('#playerModal');
+  const player = $('#player');
 
   let state = { cursor: '', hasMore: false, params: null, loading: false };
 
@@ -518,10 +520,10 @@
      NEW FEATURE: accumulate every fetch's videos for JSON export.
      Purely additive — does not modify the fetch pipeline.
      ============================================================ */
-  const allFetchedVideos = [];   // flat list of every video from every page
+  const allFetchedVideos = [];
 
   const downloadBtn = $('#downloadJsonBtn');
-  downloadBtn.addEventListener('click', () => {
+  downloadBtn.addEventListener('click', function () {
     if (allFetchedVideos.length === 0) {
       setStatus('Nothing to download — fetch something first.', 'error');
       return;
@@ -529,11 +531,11 @@
     const payload = {
       exported_at: new Date().toISOString(),
       total: allFetchedVideos.length,
-      videos: allFetchedVideos
+      videos: allFetchedVideos,
     };
     const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
     a.href = url;
     a.download = `${($('#unique_id').value.trim().replace(/^@/, '') || 'responses')}.json`;
     document.body.appendChild(a);
@@ -544,16 +546,16 @@
   });
   /* ======================== END NEW FEATURE ==================== */
 
-  endpointSel.addEventListener('change', () => {
+  endpointSel.addEventListener('change', function () {
     keywordsFld.hidden = endpointSel.value !== 'search';
   });
 
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', function (e) {
     e.preventDefault();
     run({ append: false });
   });
 
-  loadMoreBtn.addEventListener('click', () => {
+  loadMoreBtn.addEventListener('click', function () {
     if (!state.params) {
       setStatus('No previous fetch — click Fetch first.', 'error');
       return;
@@ -570,9 +572,15 @@
   });
 
   function fix(url) {
-    if (!url) return '';
-    if (/^https?:\/\//i.test(url)) return url;
-    if (!url.startsWith('/video/')) return url;
+    if (!url) {
+      return '';
+    }
+    if (/^https?:\/\//i.test(url)) {
+      return url;
+    }
+    if (!url.startsWith('/video/')) {
+      return url;
+    }
     return MEDIA + encodeURIComponent(url);
   }
 
@@ -582,17 +590,22 @@
   }
 
   async function run({ append }) {
-    if (state.loading) return;
+    if (state.loading) {
+      return;
+    }
 
     const unique_id = $('#unique_id').value.trim();
-    const endpoint  = endpointSel.value;
-    const keywords  = $('#keywords').value.trim();
-    const count     = $('#count').value.trim();
+    const endpoint = endpointSel.value;
+    const keywords = $('#keywords').value.trim();
+    const count = $('#count').value.trim();
     const rawCursor = $('#cursor').value.trim();
 
-    if (!unique_id) return setStatus('unique_id is required', 'error');
-    if (endpoint === 'search' && !keywords)
+    if (!unique_id) {
+      return setStatus('unique_id is required', 'error');
+    }
+    if (endpoint === 'search' && !keywords) {
       return setStatus('keywords is required for search', 'error');
+    }
 
     let cursor;
     if (append) {
@@ -606,9 +619,15 @@
     }
 
     const params = new URLSearchParams({ unique_id, endpoint });
-    if (count) params.set('count', count);
-    if (cursor !== undefined && cursor !== '') params.set('cursor', cursor);
-    if (endpoint === 'search') params.set('keywords', keywords);
+    if (count) {
+      params.set('count', count);
+    }
+    if (cursor !== undefined && cursor !== '') {
+      params.set('cursor', cursor);
+    }
+    if (endpoint === 'search') {
+      params.set('keywords', keywords);
+    }
 
     const url = `${PROXY}?${params.toString()}`;
     console.log(`[Fetch ${append ? 'LOAD MORE' : 'FIRST'}]`, url);
@@ -619,30 +638,34 @@
     if (!append) {
       resultsEl.innerHTML = '';
       loadMoreBtn.hidden = true;
-      // NEW FEATURE: fresh fetch resets the accumulator
       allFetchedVideos.length = 0;
     }
     setStatus(append ? 'Loading more…' : 'Loading…', '');
     updateDebug();
 
     try {
-      const res  = await fetch(url);
+      const res = await fetch(url);
       const json = await res.json();
 
-      if (!res.ok || json.error)
+      if (!res.ok || json.error) {
         throw new Error(json.error || json.details || `HTTP ${res.status}`);
-      if (json.code !== 0)
+      }
+      if (json.code !== 0) {
         throw new Error(json.msg || 'API returned non-zero code');
+      }
 
       const videos = json.data?.videos || [];
-      const data   = json.data || {};
+      const data = json.data || {};
 
-      // NEW FEATURE: append this page's videos to the accumulator
-      for (const v of videos) allFetchedVideos.push(v);
-      if (!append) renderProfile(videos.length ? videos[0].author : null);
+      for (const v of videos) {
+        allFetchedVideos.push(v);
+      }
+      if (!append) {
+        renderProfile(videos.length ? videos[0].author : null);
+      }
 
-      state.params  = params;
-      state.cursor  = data.cursor != null ? String(data.cursor) : '';
+      state.params = params;
+      state.cursor = data.cursor != null ? String(data.cursor) : '';
       state.hasMore = !!data.hasMore;
 
       $('#cursor').value = state.cursor;
@@ -674,23 +697,26 @@
       updateDebug();
     }
   }
-function renderProfile(author) {
+
+  function renderProfile(author) {
     const card = document.getElementById('profileCard');
     if (!author || !author.unique_id) {
       card.hidden = true;
       return;
     }
     const avatarEl = document.getElementById('profileAvatar');
-    const nickEl   = document.getElementById('profileNickname');
-    const uidEl    = document.getElementById('profileUnique');
+    const nickEl = document.getElementById('profileNickname');
+    const uidEl = document.getElementById('profileUnique');
 
     nickEl.textContent = author.nickname || '';
-    uidEl.textContent  = '@' + (author.unique_id || '');
+    uidEl.textContent = '@' + (author.unique_id || '');
 
     const avatarUrl = fix(author.avatar || '');
     if (avatarUrl) {
       avatarEl.src = avatarUrl;
-      avatarEl.onerror = () => { avatarEl.style.opacity = '0.15'; };
+      avatarEl.onerror = function () {
+        avatarEl.style.opacity = '0.15';
+      };
       avatarEl.style.opacity = '';
     } else {
       avatarEl.removeAttribute('src');
@@ -698,22 +724,24 @@ function renderProfile(author) {
 
     card.hidden = false;
   }
-  function render(videos, append) {
-    const html = videos.map((v) => {
-      const isPhoto = Array.isArray(v.images) && v.images.length > 0;
-      const cover   = fix(v.cover || '');
-      const play    = fix(v.play || v.wmplay || '');
-      const images  = isPhoto ? v.images.map(fix) : [];
 
-      const title    = esc(v.title || '');
-      const author   = esc(v.author?.unique_id || '');
+  function render(videos, append) {
+    const html = videos.map(function (v) {
+      const isPhoto = Array.isArray(v.images) && v.images.length > 0;
+      const cover = fix(v.cover || '');
+      const play = fix(v.play || v.wmplay || '');
+      const images = isPhoto ? v.images.map(fix) : [];
+
+      const title = esc(v.title || '');
+      const author = esc(v.author?.unique_id || '');
       const nickname = esc(v.author?.nickname || '');
-      const music    = esc(v.music_info?.title || '');
-      const initial  = (v.author?.unique_id || '?').charAt(0).toUpperCase();
+      const music = esc(v.music_info?.title || '');
+      const initial = (v.author?.unique_id || '?').charAt(0).toUpperCase();
 
       const date = v.create_time
         ? new Date(v.create_time * 1000).toLocaleDateString(undefined, {
-            month: 'short', day: 'numeric',
+            month: 'short',
+            day: 'numeric',
           })
         : '—';
       const size = v.size > 0 ? (v.size / 1048576).toFixed(1) + ' MB' : '—';
@@ -726,18 +754,18 @@ function renderProfile(author) {
         `;
 
       const stats = [
-        ['fa-heart',    fmt(v.digg_count)],
-        ['fa-comment',  fmt(v.comment_count)],
-        ['fa-share',    fmt(v.share_count)],
+        ['fa-heart', fmt(v.digg_count)],
+        ['fa-comment', fmt(v.comment_count)],
+        ['fa-share', fmt(v.share_count)],
         ['fa-download', fmt(v.download_count)],
         ['fa-bookmark', fmt(v.collect_count)],
-      ].map(([icon, val]) =>
-        `<span class="stat"><i class="fa-solid ${icon}"></i>${val}</span>`
-      ).join('');
+      ].map(function (pair) {
+        return `<span class="stat"><i class="fa-solid ${pair[0]}"></i>${pair[1]}</span>`;
+      }).join('');
 
-      const mediaUrl  = play || images[0] || '';
+      const mediaUrl = play || images[0] || '';
       const mediaType = play ? 'video' : (images.length ? 'image' : '');
-      const imgList   = isPhoto ? JSON.stringify(images) : '';
+      const imgList = isPhoto ? JSON.stringify(images) : '';
 
       return `
         <article class="card"
@@ -767,17 +795,25 @@ function renderProfile(author) {
       `;
     }).join('');
 
-    if (append) resultsEl.insertAdjacentHTML('beforeend', html);
-    else resultsEl.innerHTML = html;
+    if (append) {
+      resultsEl.insertAdjacentHTML('beforeend', html);
+    } else {
+      resultsEl.innerHTML = html;
+    }
   }
 
-  resultsEl.addEventListener('click', (e) => {
+  resultsEl.addEventListener('click', function (e) {
     const card = e.target.closest('.card');
-    if (!card) return;
+    if (!card) {
+      return;
+    }
     const type = card.dataset.type;
-    const src  = card.dataset.src;
-    if (type === 'video' && src) openVideo(src);
-    else if (type === 'image' && src) openImages(src, card.dataset.imgs);
+    const src = card.dataset.src;
+    if (type === 'video' && src) {
+      openVideo(src);
+    } else if (type === 'image' && src) {
+      openImages(src, card.dataset.imgs);
+    }
   });
 
   function openVideo(url) {
@@ -785,13 +821,19 @@ function renderProfile(author) {
     player.style.display = '';
     modal.classList.add('open');
     const p = player.play();
-    if (p && p.catch) p.catch(() => {});
+    if (p && p.catch) {
+      p.catch(function () {});
+    }
   }
 
   function openImages(firstUrl, listJson) {
     let list = [];
-    try { list = JSON.parse(listJson || '[]'); } catch {}
-    if (!list.length) list = [firstUrl];
+    try {
+      list = JSON.parse(listJson || '[]');
+    } catch {}
+    if (!list.length) {
+      list = [firstUrl];
+    }
 
     player.removeAttribute('src');
     player.pause();
@@ -804,7 +846,7 @@ function renderProfile(author) {
       'max-width:100%;max-height:100%;border-radius:8px;object-fit:contain;cursor:pointer;';
     overlay.dataset.idx = '0';
     overlay.dataset.list = JSON.stringify(list);
-    overlay.addEventListener('click', () => {
+    overlay.addEventListener('click', function () {
       const arr = JSON.parse(overlay.dataset.list);
       const next = (Number(overlay.dataset.idx) + 1) % arr.length;
       overlay.dataset.idx = String(next);
@@ -822,36 +864,53 @@ function renderProfile(author) {
     player.load();
     player.style.display = '';
     const img = document.getElementById('imageOverlay');
-    if (img) img.remove();
+    if (img) {
+      img.remove();
+    }
     modal.classList.remove('open');
   }
 
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal || e.target.closest('#playerClose')) closePlayer();
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal || e.target.closest('#playerClose')) {
+      closePlayer();
+    }
   });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('open')) closePlayer();
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.classList.contains('open')) {
+      closePlayer();
+    }
   });
 
   function setStatus(msg, type) {
     statusEl.textContent = msg || '';
     statusEl.className = type || '';
   }
+
   function esc(s) {
-    return String(s).replace(/[&<>"']/g, (c) => (
-      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-    ));
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
   }
+
   function fmt(n) {
     n = Number(n) || 0;
-    if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    if (n >= 1e9) {
+      return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (n >= 1e6) {
+      return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (n >= 1e3) {
+      return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
     return String(n);
   }
+
   function fmtDur(sec) {
     sec = Math.max(0, Math.round(Number(sec) || 0));
-    if (sec === 0) return '—';
+    if (sec === 0) {
+      return '—';
+    }
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${m}:${String(s).padStart(2, '0')}`;
