@@ -399,6 +399,13 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .profile-flag {
+    margin-left: auto;
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .profile-flag:empty { display: none; }
 </style>
 </head>
 <body>
@@ -433,6 +440,7 @@
         <div class="profile-nickname" id="profileNickname"></div>
         <div class="profile-unique" id="profileUnique"></div>
       </div>
+      <div class="profile-flag" id="profileFlag"></div>
     </div>
     <div id="results"></div>
   </main>
