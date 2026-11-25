@@ -394,6 +394,10 @@
     <div class="nav">
       <span class="tag">v2</span>
       <a class="icon-btn" href="/response.html">Response</a>
+      <!-- Download all responses button – new feature -->
+      <button class="icon-btn" id="downloadJsonBtn" title="Download all responses as JSON" style="cursor:pointer;">
+        <i class="fa-solid fa-download" style="font-size:10px;"></i>
+      </button>
     </div>
   </header>
 
@@ -464,8 +468,112 @@
   const debugEl     = $('#debug');
   const modal       = $('#playerModal');
   const player      = $('#player');
+  const downloadBtn = $('#downloadJsonBtn');
 
   let state = { cursor: '', hasMore: false, params: null, loading: false };
+
+  // ---------- NEW: global response accumulator ----------
+  // We collect all raw API responses (the JSON data from each successful fetch)
+  // keyed by a composite of request parameters + page cursor to avoid duplicates.
+  const responseStore = new Map();  // key -> { params, videos, cursor, hasMore, timestamp }
+
+  // Helper to generate a stable key from request params and cursor used for that request
+  function makeStoreKey(paramsObj, cursorUsed) {
+    const base = JSON.stringify({
+      unique_id: paramsObj.unique_id,
+      endpoint:  paramsObj.endpoint,
+      count:     paramsObj.count,
+      keywords:  paramsObj.keywords,
+    });
+    return `${base}::${cursorUsed || 'initial'}`;
+  }
+
+  // Add data to the store – does not overwrite if key exists (avoids duplicate load-more)
+  function storeResponseData(params, cursorUsed, videos, data) {
+    const key = makeStoreKey(params, cursorUsed);
+    if (!responseStore.has(key)) {
+      responseStore.set(key, {
+        params: { ...params },
+        cursorUsed,
+        videos: videos.slice(),          // store a shallow copy of the array
+        cursor: data.cursor ?? '',
+        hasMore: !!data.hasMore,
+        timestamp: Date.now()
+      });
+      console.log(`[Store] added ${videos.length} videos for cursor "${cursorUsed || 'initial'}" (total entries: ${responseStore.size})`);
+    } else {
+      // If for some reason same key appears again, we still merge any new videos (unlikely but safe)
+      const existing = responseStore.get(key);
+      const existingIds = new Set(existing.videos.map(v => v.id || v.video_id || JSON.stringify(v).slice(0,100)));
+      videos.forEach(v => {
+        const id = v.id || v.video_id || JSON.stringify(v).slice(0,100);
+        if (!existingIds.has(id)) {
+          existing.videos.push(v);
+          existingIds.add(id);
+        }
+      });
+      existing.cursor = data.cursor ?? existing.cursor;
+      existing.hasMore = !!data.hasMore;
+    }
+  }
+
+  // Build final combined JSON for download
+  function buildCombinedJSON() {
+    const pages = Array.from(responseStore.values()).sort((a, b) => a.timestamp - b.timestamp);
+    // Flatten all videos and deduplicate by id (fallback to title+author)
+    const allVideosMap = new Map();
+    pages.forEach(page => {
+      page.videos.forEach(v => {
+        const vid = v.id || v.video_id || `${v.title}|${v.author?.unique_id}|${v.create_time}`;
+        if (!allVideosMap.has(vid)) {
+          allVideosMap.set(vid, v);
+        }
+      });
+    });
+
+    const combinedVideos = Array.from(allVideosMap.values());
+    // Also include the raw pages metadata for reference
+    return {
+      meta: {
+        exported_at: new Date().toISOString(),
+        total_requests: pages.length,
+        total_unique_videos: combinedVideos.length,
+        pages: pages.map(p => ({
+          params: p.params,
+          cursor_used: p.cursorUsed,
+          next_cursor: p.cursor,
+          hasMore: p.hasMore,
+          video_count: p.videos.length
+        }))
+      },
+      videos: combinedVideos
+    };
+  }
+
+  // Trigger download of the JSON
+  function downloadAllResponses() {
+    if (responseStore.size === 0) {
+      setStatus('No responses to download yet — fetch something first.', 'error');
+      return;
+    }
+    const combined = buildCombinedJSON();
+    const jsonStr = JSON.stringify(combined, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tikwm_responses_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus(`Downloaded ${combined.meta.total_unique_videos} unique videos from ${combined.meta.total_requests} requests.`, 'success');
+  }
+
+  // Attach download button listener
+  downloadBtn.addEventListener('click', downloadAllResponses);
+
+  // ---------- existing logic continues below ----------
 
   endpointSel.addEventListener('change', () => {
     keywordsFld.hidden = endpointSel.value !== 'search';
@@ -518,14 +626,17 @@
       return setStatus('keywords is required for search', 'error');
 
     let cursor;
+    let cursorUsedForStore;   // what cursor was actually sent (empty string for initial)
     if (append) {
       cursor = String(state.cursor ?? '');
       if (!cursor) {
         setStatus('Cannot load more: cursor is empty.', 'error');
         return;
       }
+      cursorUsedForStore = cursor;
     } else {
       cursor = rawCursor || undefined;
+      cursorUsedForStore = cursor || '';
     }
 
     const params = new URLSearchParams({ unique_id, endpoint });
@@ -557,6 +668,17 @@
 
       const videos = json.data?.videos || [];
       const data   = json.data || {};
+
+      // ---- NEW: store the response data ----
+      // Build a simple object with the request params (without cursor) for store key
+      const storeParams = {
+        unique_id,
+        endpoint,
+        count: count || '',
+        keywords: endpoint === 'search' ? keywords : '',
+      };
+      storeResponseData(storeParams, cursorUsedForStore, videos, data);
+      // ---- end new ----
 
       state.params  = params;
       state.cursor  = data.cursor != null ? String(data.cursor) : '';
