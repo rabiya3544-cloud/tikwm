@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>Response Inspector · TikWM Proxy</title>
+<style>
+  :root {
+    --bg: #0a0a0e;
+    --panel: #131318;
+    --panel-2: #1a1a22;
+    --border: #26262f;
+    --text: #e9e9ef;
+    --muted: #85858f;
+    --accent: #ff2d55;
+    --accent-2: #ff5c7a;
+    --ok: #4ade80;
+    --err: #ff5c7a;
+    --radius: 8px;
+    /* syntax */
+    --k-key:  #ff8ea3;
+    --k-str:  #8be9a0;
+    --k-num:  #ffb86b;
+    --k-bool: #7cc7ff;
+    --k-null: #85858f;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.35;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app { max-width: 720px; margin: 0 auto; padding: 10px 10px 24px; }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  header h1::before {
+    content: "";
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+  header .icon-btn {
+    font-size: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 7px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--panel);
+  }
+  header .icon-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  /* Form */
+  form {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    display: grid;
+    gap: 8px;
+  }
+  .field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .field[hidden] { display: none; }
+  label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  input, select, button {
+    font: inherit;
+    font-size: 12px;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.12s, background 0.12s;
+    min-width: 0;
+  }
+  select { appearance: none; -webkit-appearance: none; padding-right: 22px; }
+  select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                      linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+  }
+  input::placeholder { color: #565660; }
+  input:focus, select:focus { border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  button.primary:hover { background: var(--accent-2); }
+  button.primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  /* Status */
+  #status {
+    font-size: 11px;
+    margin: 8px 2px;
+    min-height: 14px;
+    color: var(--muted);
+    word-break: break-word;
+  }
+  #status.error   { color: var(--err); }
+  #status.success { color: var(--ok); }
+
+  /* Key chips */
+  #keys {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 8px;
+  }
+  #keys span {
+    font-size: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  #keys:empty { display: none; }
+
+  /* Code panel */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 7px 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--panel-2);
+  }
+  .panel-title {
+    font-size: 11px;
+    font-weight: 600;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .panel-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .panel-actions button {
+    width: auto;
+    font-size: 10px;
+    padding: 3px 8px;
+    cursor: pointer;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    letter-spacing: 0.03em;
+  }
+  .panel-actions button:hover { color: var(--text); border-color: var(--muted); }
+  .panel-actions button.accent {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .panel-actions button.accent:hover { background: var(--accent-2); border-color: var(--accent-2); }
+
+  pre {
+    margin: 0;
+    padding: 10px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.45;
+    tab-size: 2;
+    white-space: pre;
+    overflow: auto;
+    max-height: 62vh;
+    -webkit-overflow-scrolling: touch;
+  }
+  pre::-webkit-scrollbar { width: 8px; height: 8px; }
+  pre::-webkit-scrollbar-thumb { background: #2e2e3a; border-radius: 4px; }
+  pre::-webkit-scrollbar-track { background: transparent; }
+
+  .k-key  { color: var(--k-key); }
+  .k-str  { color: var(--k-str); }
+  .k-num  { color: var(--k-num); }
+  .k-bool { color: var(--k-bool); }
+  .k-null { color: var(--k-null); }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Response Inspector</h1>
+      <a class="icon-btn" href="/">← Back</a>
+    </header>
+
+    <form id="form" autocomplete="off">
+      <div class="row">
+        <div class="field">
+          <label for="unique_id">Unique ID</label>
+          <input id="unique_id" value="@tiktok" spellcheck="false" />
+        </div>
+        <div class="field">
+          <label for="endpoint">Endpoint</label>
+          <select id="endpoint">
+            <option value="posts">Posts</option>
+            <option value="story">Story</option>
+            <option value="search">Search</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field" id="keywordsField" hidden>
+          <label for="keywords">Keywords</label>
+          <input id="keywords" value="cosplay" spellcheck="false" />
+        </div>
+        <div class="field">
+          <label for="count">Count</label>
+          <input id="count" type="number" value="12" min="1" max="50" />
+        </div>
+        <div class="field">
+          <label for="cursor">Cursor</label>
+          <input id="cursor" placeholder="default" />
+        </div>
+      </div>
+
+      <button type="submit" class="primary" id="submitBtn">Fetch</button>
+    </form>
+
+    <div id="status"></div>
+
+    <div id="keys"></div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title" id="panelTitle">data.videos[0]</span>
+        <div class="panel-actions">
+          <button type="button" id="toggleView">Full response</button>
+          <button type="button" id="copyBtn" class="accent">Copy</button>
+        </div>
+      </div>
+      <pre><code id="code">// press "Fetch" to load a sample…</code></pre>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const PROXY = '/api/proxy';
+  const $ = (s) => document.querySelector(s);
+
+  const form        = $('#form');
+  const endpointSel = $('#endpoint');
+  const keywordsFld = $('#keywordsField');
+  const submitBtn   = $('#submitBtn');
+  const statusEl    = $('#status');
+  const keysEl      = $('#keys');
+  const panelTitle  = $('#panelTitle');
+  const codeEl      = $('#code');
+  const toggleBtn   = $('#toggleView');
+  const copyBtn     = $('#copyBtn');
+
+  const state = {
+    firstVideo: null,
+    full: null,
+    showingFull: false,
+  };
+
+  endpointSel.addEventListener('change', () => {
+    keywordsFld.hidden = endpointSel.value !== 'search';
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    load();
+  });
+
+  toggleBtn.addEventListener('click', () => {
+    if (!state.firstVideo && !state.full) return;
+    state.showingFull = !state.showingFull;
+    paint();
+  });
+
+  copyBtn.addEventListener('click', async () => {
+    const text = currentText();
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+    const old = copyBtn.textContent;
+    copyBtn.textContent = 'Copied';
+    setTimeout(() => { copyBtn.textContent = old; }, 1100);
+  });
+
+  async function load() {
+    const unique_id = $('#unique_id').value.trim();
+    const endpoint  = endpointSel.value;
+    const keywords  = $('#keywords').value.trim();
+    const count     = $('#count').value.trim();
+    const cursor    = $('#cursor').value.trim();
+
+    if (!unique_id) return setStatus('unique_id is required', 'error');
+    if (endpoint === 'search' && !keywords)
+      return setStatus('keywords is required for search', 'error');
+
+    const params = new URLSearchParams({ unique_id, endpoint });
+    if (count)    params.set('count', count);
+    if (cursor)   params.set('cursor', cursor);
+    if (endpoint === 'search') params.set('keywords', keywords);
+
+    submitBtn.disabled = true;
+    setStatus('Loading…', '');
+
+    try {
+      const res  = await fetch(`${PROXY}?${params.toString()}`);
+      const json = await res.json();
+
+      if (!res.ok || json.error)
+        throw new Error(json.error || json.details || `HTTP ${res.status}`);
+      if (json.code !== 0)
+        throw new Error(json.msg || 'API returned non-zero code');
+
+      const videos = json?.data?.videos;
+      const data   = json?.data || {};
+
+      state.full = json;
+      state.firstVideo = Array.isArray(videos) && videos.length ? videos[0] : null;
+      state.showingFull = false;
+
+      if (!state.firstVideo) {
+        state.showingFull = true;
+        setStatus('No video objects in response — showing full body.', 'error');
+      } else {
+        setStatus(
+          `videos: ${videos.length} • cursor: ${data.cursor ?? '-'} • hasMore: ${!!data.hasMore}`,
+          'success'
+        );
+      }
+
+      paint();
+    } catch (err) {
+      state.firstVideo = null;
+      state.full = null;
+      keysEl.innerHTML = '';
+      codeEl.innerHTML = '// ' + esc(err.message || 'Request failed');
+      panelTitle.textContent = 'error';
+      setStatus(err.message || 'Request failed', 'error');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  function currentText() {
+    if (!state.full) return '';
+    const obj = state.showingFull || !state.firstVideo ? state.full : state.firstVideo;
+    return JSON.stringify(obj, null, 2);
+  }
+
+  function paint() {
+    const obj = state.showingFull || !state.firstVideo ? state.full : state.firstVideo;
+    if (!obj) {
+      codeEl.innerHTML = '// nothing loaded';
+      panelTitle.textContent = '—';
+      keysEl.innerHTML = '';
+      return;
+    }
+
+    const isFull = state.showingFull || !state.firstVideo;
+    panelTitle.textContent = isFull
+      ? 'full response'
+      : `data.videos[0] · ${Object.keys(obj).length} keys`;
+    toggleBtn.textContent = isFull ? 'Show videos[0]' : 'Full response';
+
+    // Key chips (only for the single-video view)
+    if (isFull) {
+      keysEl.innerHTML = '';
+    } else {
+      keysEl.innerHTML = Object.keys(obj)
+        .map((k) => `<span>${esc(k)}</span>`)
+        .join('');
+    }
+
+    codeEl.innerHTML = highlight(esc(JSON.stringify(obj, null, 2)));
+  }
+
+  /* ---- helpers ---- */
+
+  function setStatus(msg, type) {
+    statusEl.textContent = msg || '';
+    statusEl.className = type || '';
+  }
+
+  // Escape only what HTML needs; leave quotes so the JSON highlighter works.
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  // Lightweight JSON syntax highlighter
+  function highlight(src) {
+    return src.replace(
+      /("(?:\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*")(\s*:)?|\b(true|false)\b|\bnull\b|-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g,
+      (match, str, colon, bool) => {
+        if (str !== undefined) {
+          const cls = colon ? 'k-key' : 'k-str';
+          return `<span class="${cls}">${str}</span>${colon || ''}`;
+        }
+        if (bool !== undefined) return `<span class="k-bool">${match}</span>`;
+        if (match === 'null')   return `<span class="k-null">null</span>`;
+        return `<span class="k-num">${match}</span>`;
+      }
+    );
+  }
+
+  // Auto-load a sample on open
+  load();
+})();
+</script>
+</body>
+</html>
