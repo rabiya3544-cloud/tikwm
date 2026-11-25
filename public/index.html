@@ -887,9 +887,13 @@
   }
 
   function esc(s) {
-    return String(s).replace(/[&<>"']/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
-    });
+    var out = String(s);
+    out = out.split('&').join('&amp;');
+    out = out.split('<').join('&lt;');
+    out = out.split('>').join('&gt;');
+    out = out.split('"').join('&quot;');
+    out = out.split("'").join('&#39;');
+    return out;
   }
 
   function fmt(n) {
