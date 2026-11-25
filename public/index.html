@@ -639,6 +639,7 @@
 
       // NEW FEATURE: append this page's videos to the accumulator
       for (const v of videos) allFetchedVideos.push(v);
+      if (!append) renderProfile(videos.length ? videos[0].author : null);
 
       state.params  = params;
       state.cursor  = data.cursor != null ? String(data.cursor) : '';
