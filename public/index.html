@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>TikWM Proxy</title>
+<style>
+  :root {
+    --bg: #0a0a0e;
+    --panel: #131318;
+    --panel-2: #1a1a22;
+    --border: #26262f;
+    --text: #e9e9ef;
+    --muted: #85858f;
+    --accent: #ff2d55;
+    --accent-2: #ff5c7a;
+    --ok: #4ade80;
+    --err: #ff5c7a;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.35;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 10px 10px 24px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  header h1::before {
+    content: "";
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+  header .tag {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  /* Form */
+  form {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    display: grid;
+    gap: 8px;
+  }
+  .field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .field[hidden] { display: none; }
+  label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  input, select, button {
+    font: inherit;
+    font-size: 12px;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.12s, background 0.12s;
+    min-width: 0;
+  }
+  select { appearance: none; -webkit-appearance: none; padding-right: 22px; }
+  select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                      linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+  }
+  input::placeholder { color: #565660; }
+  input:focus, select:focus { border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  button.primary:hover { background: var(--accent-2); }
+  button.primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  button.ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    padding: 7px;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 8px;
+    width: 100%;
+  }
+  button.ghost:hover { color: var(--text); border-color: var(--muted); }
+  button.ghost[hidden] { display: none; }
+
+  /* Status */
+  #status {
+    font-size: 11px;
+    margin: 8px 2px;
+    min-height: 14px;
+    color: var(--muted);
+    word-break: break-word;
+  }
+  #status.error   { color: var(--err); }
+  #status.success { color: var(--ok); }
+
+  /* Grid */
+  #results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover { border-color: #3a3a48; transform: translateY(-1px); }
+  .thumb {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    background: #000;
+    overflow: hidden;
+  }
+  .thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .badge {
+    position: absolute;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.68);
+    color: #fff;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    line-height: 1.2;
+  }
+  .badge.plays { left: 5px; bottom: 5px; }
+  .badge.dur   { right: 5px; bottom: 5px; }
+  .meta { padding: 6px 7px 7px; }
+  .title {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--text);
+    min-height: 2.6em;
+  }
+  .author {
+    margin: 3px 0 0;
+    font-size: 10px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Player modal */
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 12px;
+    backdrop-filter: blur(6px);
+  }
+  .modal.open { display: flex; }
+  .modal video {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+    background: #000;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  }
+  .modal .close {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal .close:hover { background: rgba(255,255,255,0.22); }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>TikWM Proxy</h1>
+      <span class="tag">v1</span>
+    </header>
+
+    <form id="form" autocomplete="off">
+      <div class="field">
+        <label for="unique_id">Unique ID</label>
+        <input id="unique_id" value="@tiktok" spellcheck="false" />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="endpoint">Endpoint</label>
+          <select id="endpoint">
+            <option value="posts">Posts</option>
+            <option value="story">Story</option>
+            <option value="search">Search</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="count">Count</label>
+          <input id="count" type="number" value="12" min="1" max="50" />
+        </div>
+      </div>
+
+      <div class="field" id="keywordsField" hidden>
+        <label for="keywords">Keywords</label>
+        <input id="keywords" value="cosplay" spellcheck="false" />
+      </div>
+
+      <div class="field">
+        <label for="cursor">Cursor <span style="text-transform:none;color:#565660;">(optional)</span></label>
+        <input id="cursor" placeholder="default" />
+      </div>
+
+      <button type="submit" class="primary" id="submitBtn">Fetch</button>
+    </form>
+
+    <div id="status"></div>
+
+    <div id="results"></div>
+
+    <button class="ghost" id="loadMore" hidden>Load more</button>
+  </div>
+
+  <div class="modal" id="playerModal">
+    <button class="close" id="playerClose" aria-label="Close">×</button>
+    <video id="player" playsinline controls></video>
+  </div>
+
+<script>
+(() => {
+  const PROXY = '/api/proxy'; // change if frontend is hosted elsewhere
+  const $ = (s) => document.querySelector(s);
+
+  const form        = $('#form');
+  const endpointSel = $('#endpoint');
+  const keywordsFld = $('#keywordsField');
+  const submitBtn   = $('#submitBtn');
+  const statusEl    = $('#status');
+  const resultsEl   = $('#results');
+  const loadMoreBtn = $('#loadMore');
+  const modal       = $('#playerModal');
+  const player      = $('#player');
+
+  let state = { cursor: '', hasMore: false, params: null, loading: false };
+
+  // Toggle keywords field
+  endpointSel.addEventListener('change', () => {
+    keywordsFld.hidden = endpointSel.value !== 'search';
+  });
+
+  // Submit -> fresh run
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    run({ append: false });
+  });
+
+  // Load more -> reuse last params + new cursor
+  loadMoreBtn.addEventListener('click', () => {
+    if (!state.params || state.loading) return;
+    run({ append: true });
+  });
+
+  async function run({ append }) {
+    if (state.loading) return;
+
+    const unique_id = $('#unique_id').value.trim();
+    const endpoint  = endpointSel.value;
+    const keywords  = $('#keywords').value.trim();
+    const count     = $('#count').value.trim();
+    const rawCursor = $('#cursor').value.trim();
+
+    if (!unique_id) return setStatus('unique_id is required', 'error');
+    if (endpoint === 'search' && !keywords)
+      return setStatus('keywords is required for search', 'error');
+
+    // Cursor logic:
+    // - append -> use returned cursor from previous call
+    // - first call -> use user's cursor input, or omit to let proxy default
+    const cursor = append
+      ? state.cursor
+      : (rawCursor || undefined);
+
+    const params = new URLSearchParams({ unique_id, endpoint });
+    if (count) params.set('count', count);
+    if (cursor !== undefined) params.set('cursor', cursor);
+    if (endpoint === 'search') params.set('keywords', keywords);
+
+    state.loading = true;
+    submitBtn.disabled = true;
+    loadMoreBtn.disabled = true;
+    if (!append) {
+      resultsEl.innerHTML = '';
+      loadMoreBtn.hidden = true;
+    }
+    setStatus(append ? 'Loading more…' : 'Loading…', '');
+
+    try {
+      const res  = await fetch(`${PROXY}?${params.toString()}`);
+      const json = await res.json();
+
+      if (!res.ok || json.error)
+        throw new Error(json.error || json.details || `HTTP ${res.status}`);
+      if (json.code !== 0)
+        throw new Error(json.msg || 'API returned non-zero code');
+
+      const videos = json.data?.videos || [];
+      const data   = json.data || {};
+
+      state.params  = params;
+      state.cursor  = data.cursor ?? '';
+      state.hasMore = !!data.hasMore;
+
+      if (!videos.length) {
+        setStatus('No results', 'error');
+      } else {
+        render(videos, append);
+        setStatus(
+          `${append ? 'Loaded more' : 'Loaded'} ${videos.length} • ` +
+          `cursor ${state.cursor || '-'} • hasMore ${state.hasMore}`,
+          'success'
+        );
+      }
+
+      loadMoreBtn.hidden = !state.hasMore;
+    } catch (err) {
+      setStatus(err.message || 'Request failed', 'error');
+    } finally {
+      state.loading = false;
+      submitBtn.disabled = false;
+      loadMoreBtn.disabled = false;
+    }
+  }
+
+  function render(videos, append) {
+    const html = videos.map((v) => {
+      const cover  = v.cover || v.origin_cover || '';
+      const title  = esc(v.title || '');
+      const author = esc(v.author?.unique_id || '');
+      const plays  = fmt(v.play_count);
+      const dur    = fmtDur(v.duration);
+      const play   = v.play || v.wmplay || '';
+      return `
+        <article class="card" data-play="${esc(play)}">
+          <div class="thumb">
+            <img loading="lazy" src="${esc(cover)}" alt="" referrerpolicy="no-referrer" />
+            <span class="badge plays">▶ ${plays}</span>
+            <span class="badge dur">${dur}</span>
+          </div>
+          <div class="meta">
+            <p class="title">${title || '&nbsp;'}</p>
+            <p class="author">@${author || 'unknown'}</p>
+          </div>
+        </article>
+      `;
+    }).join('');
+
+    if (append) resultsEl.insertAdjacentHTML('beforeend', html);
+    else resultsEl.innerHTML = html;
+  }
+
+  // Event delegation for card clicks
+  resultsEl.addEventListener('click', (e) => {
+    const card = e.target.closest('.card');
+    if (!card) return;
+    const url = card.dataset.play;
+    if (url) openPlayer(url);
+  });
+
+  function openPlayer(url) {
+    player.src = url;
+    modal.classList.add('open');
+    const p = player.play();
+    if (p && p.catch) p.catch(() => {});
+  }
+
+  function closePlayer() {
+    player.pause();
+    player.removeAttribute('src');
+    player.load();
+    modal.classList.remove('open');
+  }
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal || e.target.id === 'playerClose') closePlayer();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('open')) closePlayer();
+  });
+
+  // Helpers
+  function setStatus(msg, type) {
+    statusEl.textContent = msg || '';
+    statusEl.className = type || '';
+  }
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+  function fmt(n) {
+    n = Number(n) || 0;
+    if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    return String(n);
+  }
+  function fmtDur(sec) {
+    sec = Math.max(0, Math.round(Number(sec) || 0));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+})();
+</script>
+</body>
+</html>
