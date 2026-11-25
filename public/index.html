@@ -386,6 +386,42 @@
     justify-content: center;
   }
   .modal .close:hover { background: rgba(255,255,255,0.22); }
+  /* ---------- Profile Card ---------- */
+  .profile-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .profile-card[hidden] { display: none; }
+  .profile-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .profile-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .profile-nickname {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .profile-unique {
+    font-size: 10.5px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 </style>
 </head>
 <body>
@@ -437,6 +473,13 @@
     </form>
 
     <div id="status"></div>
+    <div id="profileCard" class="profile-card" hidden>
+      <img class="profile-avatar" id="profileAvatar" alt="" />
+      <div class="profile-info">
+        <div class="profile-nickname" id="profileNickname"></div>
+        <div class="profile-unique" id="profileUnique"></div>
+      </div>
+    </div>
     <div id="results"></div>
   </main>
 
