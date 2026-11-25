@@ -394,6 +394,10 @@
     <div class="nav">
       <span class="tag">v2</span>
       <a class="icon-btn" href="/response.html">Response</a>
+      <!-- NEW FEATURE: download all responses as JSON -->
+      <button class="icon-btn" id="downloadJsonBtn" title="Download all responses as JSON" style="cursor:pointer;">
+        <i class="fa-solid fa-download" style="font-size:10px;"></i>
+      </button>
     </div>
   </header>
 
@@ -466,6 +470,36 @@
   const player      = $('#player');
 
   let state = { cursor: '', hasMore: false, params: null, loading: false };
+
+  /* ============================================================
+     NEW FEATURE: accumulate every fetch's videos for JSON export.
+     Purely additive — does not modify the fetch pipeline.
+     ============================================================ */
+  const allFetchedVideos = [];   // flat list of every video from every page
+
+  const downloadBtn = $('#downloadJsonBtn');
+  downloadBtn.addEventListener('click', () => {
+    if (allFetchedVideos.length === 0) {
+      setStatus('Nothing to download — fetch something first.', 'error');
+      return;
+    }
+    const payload = {
+      exported_at: new Date().toISOString(),
+      total: allFetchedVideos.length,
+      videos: allFetchedVideos
+    };
+    const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = `responses_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus(`Downloaded ${allFetchedVideos.length} videos.`, 'success');
+  });
+  /* ======================== END NEW FEATURE ==================== */
 
   endpointSel.addEventListener('change', () => {
     keywordsFld.hidden = endpointSel.value !== 'search';
@@ -542,6 +576,8 @@
     if (!append) {
       resultsEl.innerHTML = '';
       loadMoreBtn.hidden = true;
+      // NEW FEATURE: fresh fetch resets the accumulator
+      allFetchedVideos.length = 0;
     }
     setStatus(append ? 'Loading more…' : 'Loading…', '');
     updateDebug();
@@ -557,6 +593,9 @@
 
       const videos = json.data?.videos || [];
       const data   = json.data || {};
+
+      // NEW FEATURE: append this page's videos to the accumulator
+      for (const v of videos) allFetchedVideos.push(v);
 
       state.params  = params;
       state.cursor  = data.cursor != null ? String(data.cursor) : '';
