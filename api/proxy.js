@@ -35,11 +35,10 @@ export default async function handler(req, res) {
       return;
     }
 
-    const encodedId = encodeURIComponent(decodeURIComponent(unique_id));
     const baseUrl   = ENDPOINT_MAP[endpoint];
     const params    = new URLSearchParams();
 
-    params.append('unique_id', encodedId);
+    params.append('unique_id', unique_id);
     params.append('count', count || '12');
     if (cursor !== undefined && cursor !== '') {
       params.append('cursor', cursor);
