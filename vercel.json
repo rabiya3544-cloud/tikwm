@@ -1,15 +1,13 @@
 {
-  "version": 2,
-  "routes": [
+  "regions": ["sin1"],
+  "headers": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/proxy.js",
-      "methods": ["GET", "POST", "OPTIONS", "DELETE"],
-      "headers": {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, OPTIONS, DELETE",
-        "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization"
-      }
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS, DELETE" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Accept, Authorization" }
+      ]
     }
   ]
 }
