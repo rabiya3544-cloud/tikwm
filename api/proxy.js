@@ -30,7 +30,8 @@ export default async function handler(req, res) {
   try {
     const r = await fetch(url);
     const text = await r.text();
-    res.status(r.status).type('application/json').send(text);
+    res.setHeader('content-type', 'application/json');
+    res.status(r.status).send(text);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
