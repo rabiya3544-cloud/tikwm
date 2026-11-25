@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="color-scheme" content="dark" />
 <title>TikWM Proxy</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 <style>
   :root {
     --bg: #0a0a0e;
@@ -20,6 +21,7 @@
     --radius: 8px;
   }
   * { box-sizing: border-box; }
+  html { height: 100%; }
   html, body {
     margin: 0; padding: 0;
     background: var(--bg);
@@ -30,18 +32,25 @@
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
   }
-  .app {
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
     max-width: 720px;
     margin: 0 auto;
-    padding: 10px 10px 24px;
+    overflow: hidden;
   }
 
-  /* Header */
+  /* ---------- Header ---------- */
   header {
+    flex-shrink: 0;
+    padding: 10px 10px 8px;
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    gap: 8px;
   }
   header h1 {
     margin: 0;
@@ -59,11 +68,40 @@
     background: var(--accent);
     box-shadow: 0 0 10px var(--accent);
   }
+  header .nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
   header .tag {
     font-size: 10px;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
+  }
+  header .icon-btn {
+    font-size: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 7px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--panel);
+  }
+  header .icon-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  /* ---------- Main (scrollable) ---------- */
+  main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
 
   /* Form */
@@ -74,6 +112,7 @@
     padding: 10px;
     display: grid;
     gap: 8px;
+    flex-shrink: 0;
   }
   .field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
   .field[hidden] { display: none; }
@@ -126,30 +165,32 @@
     background: transparent;
     color: var(--muted);
     border: 1px dashed var(--border);
-    padding: 7px;
+    padding: 8px;
     font-size: 11px;
     cursor: pointer;
-    margin-top: 8px;
     width: 100%;
+    letter-spacing: 0.02em;
   }
   button.ghost:hover { color: var(--text); border-color: var(--muted); }
   button.ghost[hidden] { display: none; }
+  button.ghost:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* Status */
   #status {
     font-size: 11px;
-    margin: 8px 2px;
+    margin: 0 2px;
     min-height: 14px;
     color: var(--muted);
     word-break: break-word;
+    flex-shrink: 0;
   }
   #status.error   { color: var(--err); }
   #status.success { color: var(--ok); }
 
-  /* Grid */
+  /* ---------- Grid ---------- */
   #results {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
     gap: 8px;
   }
   .card {
@@ -161,6 +202,7 @@
     transition: transform 0.12s, border-color 0.12s;
     display: flex;
     flex-direction: column;
+    min-width: 0;
   }
   .card:hover { border-color: #3a3a48; transform: translateY(-1px); }
   .thumb {
@@ -168,6 +210,7 @@
     aspect-ratio: 9 / 16;
     background: #000;
     overflow: hidden;
+    flex-shrink: 0;
   }
   .thumb img {
     width: 100%; height: 100%;
@@ -176,22 +219,33 @@
   }
   .badge {
     position: absolute;
-    font-size: 10px;
+    font-size: 9.5px;
     font-weight: 500;
     padding: 2px 5px;
     border-radius: 4px;
-    background: rgba(0,0,0,0.68);
+    background: rgba(0,0,0,0.72);
     color: #fff;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
   }
-  .badge.plays { left: 5px; bottom: 5px; }
-  .badge.dur   { right: 5px; bottom: 5px; }
-  .meta { padding: 6px 7px 7px; }
+  .badge i { font-size: 8px; }
+  .badge.bl { left: 5px; bottom: 5px; }
+  .badge.br { right: 5px; bottom: 5px; }
+
+  .meta {
+    padding: 6px 7px 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
   .title {
     margin: 0;
-    font-size: 11px;
+    font-size: 10.5px;
     line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -201,15 +255,104 @@
     min-height: 2.6em;
   }
   .author {
-    margin: 3px 0 0;
-    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9.5px;
     color: var(--muted);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .avatar {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--muted);
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .author .handle {
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .author .nickname {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .stat {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .stat i { font-size: 8px; }
+
+  .meta-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .meta-line span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+  }
+  .meta-line i { font-size: 8px; }
+
+  .audio {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
+    color: var(--muted);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .audio i { flex-shrink: 0; font-size: 8px; }
+  .audio span { overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    flex-shrink: 0;
+    padding: 8px 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #debug {
+    font-size: 9.5px;
+    color: #555;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* Player modal */
+  /* ---------- Modal ---------- */
   .modal {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.88);
@@ -236,43 +379,25 @@
     background: rgba(255,255,255,0.12);
     border: none;
     color: #fff;
-    font-size: 18px;
-    line-height: 1;
+    font-size: 14px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .modal .close:hover { background: rgba(255,255,255,0.22); }
-  header .nav {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  header .icon-btn {
-    font-size: 10px;
-    color: var(--muted);
-    text-decoration: none;
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 3px 7px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    background: var(--panel);
-  }
-  header .icon-btn:hover { color: var(--text); border-color: var(--muted); }
 </style>
 </head>
 <body>
-  <div class="app">
-    <header>
-      <h1>TikWM Proxy</h1>
-      <div class="nav">
-        <span class="tag">v1</span>
-        <a class="icon-btn" href="/response.html">Response</a>
-      </div>
-    </header>
+  <header>
+    <h1>TikWM Proxy</h1>
+    <div class="nav">
+      <span class="tag">v2</span>
+      <a class="icon-btn" href="/response.html">Response</a>
+    </div>
+  </header>
 
+  <main>
     <form id="form" autocomplete="off">
       <div class="field">
         <label for="unique_id">Unique ID</label>
@@ -308,16 +433,21 @@
     </form>
 
     <div id="status"></div>
-
     <div id="results"></div>
-<div id="debug" style="font-size:10px;color:#555;font-family:ui-monospace,monospace;margin-top:6px;"></div>
+  </main>
+
+  <footer>
+    <div id="debug">cursor: — · hasMore: false · loading: false</div>
     <button class="ghost" id="loadMore" hidden>Load more</button>
-  </div>
+  </footer>
 
   <div class="modal" id="playerModal">
-    <button class="close" id="playerClose" aria-label="Close">×</button>
+    <button class="close" id="playerClose" aria-label="Close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
     <video id="player" playsinline controls></video>
   </div>
+
 <script>
 (() => {
   const PROXY = '/api/proxy';
@@ -362,8 +492,6 @@
     run({ append: true });
   });
 
-  // Route TikWM-relative media through /api/media (ScraperAPI),
-  // let absolute URLs (tiktokcdn-eu.com music, etc.) through untouched.
   function fix(url) {
     if (!url) return '';
     if (/^https?:\/\//i.test(url)) return url;
@@ -422,14 +550,6 @@
       const res  = await fetch(url);
       const json = await res.json();
 
-      console.log('[Response]', {
-        ok: res.ok,
-        code: json.code,
-        cursor: json.data?.cursor,
-        hasMore: json.data?.hasMore,
-        videoCount: json.data?.videos?.length,
-      });
-
       if (!res.ok || json.error)
         throw new Error(json.error || json.details || `HTTP ${res.status}`);
       if (json.code !== 0)
@@ -441,7 +561,7 @@
       state.params  = params;
       state.cursor  = data.cursor != null ? String(data.cursor) : '';
       state.hasMore = !!data.hasMore;
-      
+
       $('#cursor').value = state.cursor;
 
       if (!videos.length) {
@@ -482,8 +602,32 @@
       const title    = esc(v.title || '');
       const author   = esc(v.author?.unique_id || '');
       const nickname = esc(v.author?.nickname || '');
-      const plays    = fmt(v.play_count);
-      const durLabel = isPhoto ? `📷 ${images.length}` : fmtDur(v.duration);
+      const music    = esc(v.music_info?.title || '');
+      const initial  = (v.author?.unique_id || '?').charAt(0).toUpperCase();
+
+      const date = v.create_time
+        ? new Date(v.create_time * 1000).toLocaleDateString(undefined, {
+            month: 'short', day: 'numeric',
+          })
+        : '—';
+      const size = v.size > 0 ? (v.size / 1048576).toFixed(1) + ' MB' : '—';
+
+      const badges = isPhoto
+        ? `<span class="badge bl"><i class="fa-solid fa-layer-group"></i> ${images.length}</span>`
+        : `
+          <span class="badge bl"><i class="fa-solid fa-play"></i> ${fmt(v.play_count)}</span>
+          <span class="badge br"><i class="fa-solid fa-clock"></i> ${fmtDur(v.duration)}</span>
+        `;
+
+      const stats = [
+        ['fa-heart',    fmt(v.digg_count)],
+        ['fa-comment',  fmt(v.comment_count)],
+        ['fa-share',    fmt(v.share_count)],
+        ['fa-download', fmt(v.download_count)],
+        ['fa-bookmark', fmt(v.collect_count)],
+      ].map(([icon, val]) =>
+        `<span class="stat"><i class="fa-solid ${icon}"></i>${val}</span>`
+      ).join('');
 
       const mediaUrl  = play || images[0] || '';
       const mediaType = play ? 'video' : (images.length ? 'image' : '');
@@ -497,12 +641,21 @@
           <div class="thumb">
             <img loading="lazy" src="${esc(cover)}" alt=""
                  onerror="this.style.opacity=0.15" />
-            <span class="badge plays">▶ ${plays}</span>
-            <span class="badge dur">${esc(durLabel)}</span>
+            ${badges}
           </div>
           <div class="meta">
             <p class="title">${title || '&nbsp;'}</p>
-            <p class="author">@${author || 'unknown'}${nickname ? ' · ' + nickname : ''}</p>
+            <div class="author">
+              <span class="avatar">${esc(initial)}</span>
+              <span class="handle">@${author || 'unknown'}</span>
+              ${nickname ? `<span class="nickname">· ${nickname}</span>` : ''}
+            </div>
+            <div class="stats">${stats}</div>
+            <div class="meta-line">
+              <span><i class="fa-regular fa-calendar"></i>${date}</span>
+              <span><i class="fa-solid fa-hard-drive"></i>${size}</span>
+            </div>
+            ${music ? `<div class="audio" title="${music}"><i class="fa-solid fa-music"></i><span>${music}</span></div>` : ''}
           </div>
         </article>
       `;
@@ -542,7 +695,7 @@
     overlay.alt = '';
     overlay.id = 'imageOverlay';
     overlay.style.cssText =
-      'max-width:100%;max-height:100%;border-radius:8px;object-fit:contain;';
+      'max-width:100%;max-height:100%;border-radius:8px;object-fit:contain;cursor:pointer;';
     overlay.dataset.idx = '0';
     overlay.dataset.list = JSON.stringify(list);
     overlay.addEventListener('click', () => {
@@ -568,7 +721,7 @@
   }
 
   modal.addEventListener('click', (e) => {
-    if (e.target === modal || e.target.id === 'playerClose') closePlayer();
+    if (e.target === modal || e.target.closest('#playerClose')) closePlayer();
   });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && modal.classList.contains('open')) closePlayer();
@@ -599,521 +752,5 @@
   }
 })();
 </script>
-  <!--
-  <script>
-(() => {
-  const PROXY = '/api/proxy';
-  const CDN   = 'https://www.tikwm.com';
-  const $ = (s) => document.querySelector(s);
-
-  const form        = $('#form');
-  const endpointSel = $('#endpoint');
-  const keywordsFld = $('#keywordsField');
-  const submitBtn   = $('#submitBtn');
-  const statusEl    = $('#status');
-  const resultsEl   = $('#results');
-  const loadMoreBtn = $('#loadMore');
-  const debugEl     = $('#debug');
-  const modal       = $('#playerModal');
-  const player      = $('#player');
-
-  let state = { cursor: '', hasMore: false, params: null, loading: false };
-
-  endpointSel.addEventListener('change', () => {
-    keywordsFld.hidden = endpointSel.value !== 'search';
-  });
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    run({ append: false });
-  });
-
-  loadMoreBtn.addEventListener('click', () => {
-    if (!state.params) {
-      setStatus('No previous fetch — click Fetch first.', 'error');
-      return;
-    }
-    if (state.loading) {
-      setStatus('Already loading, wait…', 'error');
-      return;
-    }
-    if (!state.cursor) {
-      setStatus('API returned no cursor — nothing more to load.', 'error');
-      return;
-    }
-    run({ append: true });
-  });
-
-  function fix(url) {
-    if (!url) return '';
-    return /^https?:\/\//i.test(url) ? url : CDN + url;
-  }
-
-  function updateDebug() {
-    debugEl.textContent =
-      `cursor: ${state.cursor || '—'} · hasMore: ${state.hasMore} · loading: ${state.loading}`;
-  }
-
-  async function run({ append }) {
-    if (state.loading) return;
-
-    const unique_id = $('#unique_id').value.trim();
-    const endpoint  = endpointSel.value;
-    const keywords  = $('#keywords').value.trim();
-    const count     = $('#count').value.trim();
-    const rawCursor = $('#cursor').value.trim();
-
-    if (!unique_id) return setStatus('unique_id is required', 'error');
-    if (endpoint === 'search' && !keywords)
-      return setStatus('keywords is required for search', 'error');
-
-    let cursor;
-    if (append) {
-      cursor = String(state.cursor ?? '');
-      if (!cursor) {
-        setStatus('Cannot load more: cursor is empty.', 'error');
-        return;
-      }
-    } else {
-      cursor = rawCursor || undefined;
-    }
-
-    const params = new URLSearchParams({ unique_id, endpoint });
-    if (count) params.set('count', count);
-    if (cursor !== undefined && cursor !== '') params.set('cursor', cursor);
-    if (endpoint === 'search') params.set('keywords', keywords);
-
-    const url = `${PROXY}?${params.toString()}`;
-    console.log(`[Fetch ${append ? 'LOAD MORE' : 'FIRST'}]`, url);
-
-    state.loading = true;
-    submitBtn.disabled = true;
-    loadMoreBtn.disabled = true;
-    if (!append) {
-      resultsEl.innerHTML = '';
-      loadMoreBtn.hidden = true;
-    }
-    setStatus(append ? 'Loading more…' : 'Loading…', '');
-    updateDebug();
-
-    try {
-      const res  = await fetch(url);
-      const json = await res.json();
-
-      console.log('[Response]', {
-        ok: res.ok,
-        code: json.code,
-        cursor: json.data?.cursor,
-        hasMore: json.data?.hasMore,
-        videoCount: json.data?.videos?.length,
-      });
-
-      if (!res.ok || json.error)
-        throw new Error(json.error || json.details || `HTTP ${res.status}`);
-      if (json.code !== 0)
-        throw new Error(json.msg || 'API returned non-zero code');
-
-      const videos = json.data?.videos || [];
-      const data   = json.data || {};
-
-      state.params  = params;
-      state.cursor  = data.cursor != null ? String(data.cursor) : '';
-      state.hasMore = !!data.hasMore;
-
-      if (!videos.length) {
-        setStatus(append ? 'No more results' : 'No results', 'error');
-        state.hasMore = false;
-      } else {
-        render(videos, append);
-        setStatus(
-          `${append ? 'Loaded more' : 'Loaded'} ${videos.length} • ` +
-          `cursor ${state.cursor || '-'} • hasMore ${state.hasMore}`,
-          'success'
-        );
-      }
-
-      loadMoreBtn.hidden = !state.hasMore;
-      if (state.hasMore) {
-        loadMoreBtn.textContent =
-          `Load more · cursor ${state.cursor.slice(0, 6)}…`;
-      }
-    } catch (err) {
-      console.error('[Fetch Error]', err);
-      setStatus(err.message || 'Request failed', 'error');
-    } finally {
-      state.loading = false;
-      submitBtn.disabled = false;
-      loadMoreBtn.disabled = false;
-      updateDebug();
-    }
-  }
-
-  function render(videos, append) {
-    const html = videos.map((v) => {
-      const isPhoto = Array.isArray(v.images) && v.images.length > 0;
-      const cover   = fix(v.cover || '');
-      const play    = fix(v.play || v.wmplay || '');
-      const images  = isPhoto ? v.images.map(fix) : [];
-
-      const title    = esc(v.title || '');
-      const author   = esc(v.author?.unique_id || '');
-      const nickname = esc(v.author?.nickname || '');
-      const plays    = fmt(v.play_count);
-      const durLabel = isPhoto ? `📷 ${images.length}` : fmtDur(v.duration);
-
-      const mediaUrl  = play || images[0] || '';
-      const mediaType = play ? 'video' : (images.length ? 'image' : '');
-      const imgList   = isPhoto ? JSON.stringify(images) : '';
-
-      return `
-        <article class="card"
-                 data-type="${mediaType}"
-                 data-src="${esc(mediaUrl)}"
-                 data-imgs="${esc(imgList)}">
-          <div class="thumb">
-            <img loading="lazy" src="${esc(cover)}" alt=""
-                 referrerpolicy="no-referrer"
-                 onerror="this.style.opacity=0.15" />
-            <span class="badge plays">▶ ${plays}</span>
-            <span class="badge dur">${esc(durLabel)}</span>
-          </div>
-          <div class="meta">
-            <p class="title">${title || '&nbsp;'}</p>
-            <p class="author">@${author || 'unknown'}${nickname ? ' · ' + nickname : ''}</p>
-          </div>
-        </article>
-      `;
-    }).join('');
-
-    if (append) resultsEl.insertAdjacentHTML('beforeend', html);
-    else resultsEl.innerHTML = html;
-  }
-
-  resultsEl.addEventListener('click', (e) => {
-    const card = e.target.closest('.card');
-    if (!card) return;
-    const type = card.dataset.type;
-    const src  = card.dataset.src;
-    if (type === 'video' && src) openVideo(src);
-    else if (type === 'image' && src) openImages(src, card.dataset.imgs);
-  });
-
-  function openVideo(url) {
-    player.src = url;
-    player.style.display = '';
-    modal.classList.add('open');
-    const p = player.play();
-    if (p && p.catch) p.catch(() => {});
-  }
-
-  function openImages(firstUrl, listJson) {
-    let list = [];
-    try { list = JSON.parse(listJson || '[]'); } catch {}
-    if (!list.length) list = [firstUrl];
-
-    player.removeAttribute('src');
-    player.pause();
-
-    const overlay = document.createElement('img');
-    overlay.src = list[0];
-    overlay.alt = '';
-    overlay.id = 'imageOverlay';
-    overlay.style.cssText =
-      'max-width:100%;max-height:100%;border-radius:8px;object-fit:contain;';
-    overlay.dataset.idx = '0';
-    overlay.dataset.list = JSON.stringify(list);
-    overlay.addEventListener('click', () => {
-      const arr = JSON.parse(overlay.dataset.list);
-      const next = (Number(overlay.dataset.idx) + 1) % arr.length;
-      overlay.dataset.idx = String(next);
-      overlay.src = arr[next];
-    });
-
-    player.style.display = 'none';
-    modal.appendChild(overlay);
-    modal.classList.add('open');
-  }
-
-  function closePlayer() {
-    player.pause();
-    player.removeAttribute('src');
-    player.load();
-    player.style.display = '';
-    const img = document.getElementById('imageOverlay');
-    if (img) img.remove();
-    modal.classList.remove('open');
-  }
-
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal || e.target.id === 'playerClose') closePlayer();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('open')) closePlayer();
-  });
-
-  function setStatus(msg, type) {
-    statusEl.textContent = msg || '';
-    statusEl.className = type || '';
-  }
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, (c) => (
-      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-    ));
-  }
-  function fmt(n) {
-    n = Number(n) || 0;
-    if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
-    return String(n);
-  }
-  function fmtDur(sec) {
-    sec = Math.max(0, Math.round(Number(sec) || 0));
-    if (sec === 0) return '—';
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
-  }
-})();
-</script>
-  -->
-<!--
-<script>
-(() => {
-  const PROXY = '/api/proxy';
-  const CDN = 'https://www.tikwm.com';
-  const $ = (s) => document.querySelector(s);
-
-  const form        = $('#form');
-  const endpointSel = $('#endpoint');
-  const keywordsFld = $('#keywordsField');
-  const submitBtn   = $('#submitBtn');
-  const statusEl    = $('#status');
-  const resultsEl   = $('#results');
-  const loadMoreBtn = $('#loadMore');
-  const modal       = $('#playerModal');
-  const player      = $('#player');
-
-  let state = { cursor: '', hasMore: false, params: null, loading: false };
-
-  endpointSel.addEventListener('change', () => {
-    keywordsFld.hidden = endpointSel.value !== 'search';
-  });
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    run({ append: false });
-  });
-
-  loadMoreBtn.addEventListener('click', () => {
-    if (!state.params || state.loading) return;
-    run({ append: true });
-  });
-
-  // Prepend CDN to relative paths, leave absolute URLs alone
-  function fix(url) {
-    if (!url) return '';
-    return /^https?:\/\//i.test(url) ? url : CDN + url;
-  }
-
-  async function run({ append }) {
-    if (state.loading) return;
-
-    const unique_id = $('#unique_id').value.trim();
-    const endpoint  = endpointSel.value;
-    const keywords  = $('#keywords').value.trim();
-    const count     = $('#count').value.trim();
-    const rawCursor = $('#cursor').value.trim();
-
-    if (!unique_id) return setStatus('unique_id is required', 'error');
-    if (endpoint === 'search' && !keywords)
-      return setStatus('keywords is required for search', 'error');
-
-    const cursor = append
-      ? state.cursor
-      : (rawCursor || undefined);
-
-    const params = new URLSearchParams({ unique_id, endpoint });
-    if (count) params.set('count', count);
-    if (cursor !== undefined) params.set('cursor', cursor);
-    if (endpoint === 'search') params.set('keywords', keywords);
-
-    state.loading = true;
-    submitBtn.disabled = true;
-    loadMoreBtn.disabled = true;
-    if (!append) {
-      resultsEl.innerHTML = '';
-      loadMoreBtn.hidden = true;
-    }
-    setStatus(append ? 'Loading more…' : 'Loading…', '');
-
-    try {
-      const res  = await fetch(`${PROXY}?${params.toString()}`);
-      const json = await res.json();
-
-      if (!res.ok || json.error)
-        throw new Error(json.error || json.details || `HTTP ${res.status}`);
-      if (json.code !== 0)
-        throw new Error(json.msg || 'API returned non-zero code');
-
-      const videos = json.data?.videos || [];
-      const data   = json.data || {};
-
-      state.params  = params;
-      state.cursor  = data.cursor ?? '';
-      state.hasMore = !!data.hasMore;
-
-      if (!videos.length) {
-        setStatus('No results', 'error');
-      } else {
-        render(videos, append);
-        setStatus(
-          `${append ? 'Loaded more' : 'Loaded'} ${videos.length} • ` +
-          `cursor ${state.cursor || '-'} • hasMore ${state.hasMore}`,
-          'success'
-        );
-      }
-
-      loadMoreBtn.hidden = !state.hasMore;
-    } catch (err) {
-      setStatus(err.message || 'Request failed', 'error');
-    } finally {
-      state.loading = false;
-      submitBtn.disabled = false;
-      loadMoreBtn.disabled = false;
-    }
-  }
-
-  function render(videos, append) {
-    const html = videos.map((v) => {
-      const isPhoto = Array.isArray(v.images) && v.images.length > 0;
-      const cover   = fix(v.cover || '');
-      const play    = fix(v.play || v.wmplay || '');
-      const images  = isPhoto ? v.images.map(fix) : [];
-
-      const title    = esc(v.title || '');
-      const author   = esc(v.author?.unique_id || '');
-      const nickname = esc(v.author?.nickname || '');
-      const plays    = fmt(v.play_count);
-      const durLabel = isPhoto ? `📷 ${images.length}` : fmtDur(v.duration);
-
-      // Payload for the modal: real video if available, else first image
-      const mediaUrl  = play || images[0] || '';
-      const mediaType = play ? 'video' : (images.length ? 'image' : '');
-      const imgList   = isPhoto ? JSON.stringify(images) : '';
-
-      return `
-        <article class="card"
-                 data-type="${mediaType}"
-                 data-src="${esc(mediaUrl)}"
-                 data-imgs="${esc(imgList)}">
-          <div class="thumb">
-            <img loading="lazy" src="${esc(cover)}" alt=""
-                 referrerpolicy="no-referrer"
-                 onerror="this.style.opacity=0.15" />
-            <span class="badge plays">▶ ${plays}</span>
-            <span class="badge dur">${esc(durLabel)}</span>
-          </div>
-          <div class="meta">
-            <p class="title">${title || '&nbsp;'}</p>
-            <p class="author">@${author || 'unknown'}${nickname ? ' · ' + nickname : ''}</p>
-          </div>
-        </article>
-      `;
-    }).join('');
-
-    if (append) resultsEl.insertAdjacentHTML('beforeend', html);
-    else resultsEl.innerHTML = html;
-  }
-
-  resultsEl.addEventListener('click', (e) => {
-    const card = e.target.closest('.card');
-    if (!card) return;
-    const type = card.dataset.type;
-    const src  = card.dataset.src;
-    if (type === 'video' && src) openVideo(src);
-    else if (type === 'image' && src) openImages(src, card.dataset.imgs);
-  });
-
-  function openVideo(url) {
-    player.src = url;
-    player.style.display = '';
-    modal.classList.add('open');
-    const p = player.play();
-    if (p && p.catch) p.catch(() => {});
-  }
-
-  function openImages(firstUrl, listJson) {
-    let list = [];
-    try { list = JSON.parse(listJson || '[]'); } catch {}
-    if (!list.length) list = [firstUrl];
-
-    player.removeAttribute('src');
-    player.pause();
-
-    // Simple overlay: show first image, tap to advance
-    const overlay = document.createElement('img');
-    overlay.src = list[0];
-    overlay.alt = '';
-    overlay.id = 'imageOverlay';
-    overlay.style.cssText =
-      'max-width:100%;max-height:100%;border-radius:8px;object-fit:contain;';
-    overlay.dataset.idx = '0';
-    overlay.dataset.list = JSON.stringify(list);
-    overlay.addEventListener('click', () => {
-      const arr = JSON.parse(overlay.dataset.list);
-      const next = (Number(overlay.dataset.idx) + 1) % arr.length;
-      overlay.dataset.idx = String(next);
-      overlay.src = arr[next];
-    });
-
-    player.style.display = 'none';
-    modal.appendChild(overlay);
-    modal.classList.add('open');
-  }
-
-  function closePlayer() {
-    player.pause();
-    player.removeAttribute('src');
-    player.load();
-    player.style.display = '';
-    const img = document.getElementById('imageOverlay');
-    if (img) img.remove();
-    modal.classList.remove('open');
-  }
-
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal || e.target.id === 'playerClose') closePlayer();
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && modal.classList.contains('open')) closePlayer();
-  });
-
-  function setStatus(msg, type) {
-    statusEl.textContent = msg || '';
-    statusEl.className = type || '';
-  }
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, (c) => (
-      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
-    ));
-  }
-  function fmt(n) {
-    n = Number(n) || 0;
-    if (n >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
-    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
-    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
-    return String(n);
-  }
-  function fmtDur(sec) {
-    sec = Math.max(0, Math.round(Number(sec) || 0));
-    if (sec === 0) return '—';
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${m}:${String(s).padStart(2, '0')}`;
-  }
-})();
-</script>
-  -->
 </body>
 </html>
