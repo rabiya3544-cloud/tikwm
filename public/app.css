@@ -236,6 +236,8 @@ button.ghost:disabled { opacity: 0.5; cursor: not-allowed; }
 .badge i { font-size: 8px; }
 .badge.bl { left: 5px; bottom: 5px; }
 .badge.br { right: 5px; bottom: 5px; }
+.badge.tl { left: 5px; top: 5px; }
+.badge.tr { right: 5px; top: 5px; }
 
 .meta {
   padding: 6px 7px 7px;
