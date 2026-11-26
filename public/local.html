@@ -634,10 +634,7 @@
       var images = isPhoto ? v.images.map(fix) : [];
 
       var title = esc(v.title || '');
-      var author = esc(v.author && v.author.unique_id ? v.author.unique_id : '');
-      var nickname = esc(v.author && v.author.nickname ? v.author.nickname : '');
       var music = esc(v.music_info && v.music_info.title ? v.music_info.title : '');
-      var initial = (v.author && v.author.unique_id ? v.author.unique_id : '?').charAt(0).toUpperCase();
 
       var date = v.create_time
         ? new Date(v.create_time * 1000).toLocaleDateString(undefined, {
@@ -674,11 +671,6 @@
           '</div>' +
           '<div class="meta">' +
             '<p class="title">' + (title || '&nbsp;') + '</p>' +
-            '<div class="author">' +
-              '<span class="avatar">' + esc(initial) + '</span>' +
-              '<span class="handle">@' + (author || 'unknown') + '</span>' +
-              (nickname ? '<span class="nickname">· ' + nickname + '</span>' : '') +
-            '</div>' +
             '<div class="stats">' + stats + '</div>' +
             '<div class="meta-line">' +
               '<span><i class="fa-regular fa-calendar"></i>' + date + '</span>' +
