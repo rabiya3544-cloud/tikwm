@@ -413,10 +413,15 @@
     <h1>TikWM Local</h1>
     <div class="nav">
       <span class="tag">v2</span>
-      <a class="icon-btn" href="/index.html">
-        <i class="fa-solid fa-home" style="font-size:10px;"></i>
+      <a class="icon-btn" href="/index.html" title="Home">
+        <i class="fa-solid fa-house" style="font-size:10px;"></i>
       </a>
-      <a class="icon-btn" href="/response.html">Response</a>
+      <a class="icon-btn" href="/local.html" hidden title="Local">
+        <i class="fa-solid fa-file-code" style="font-size:10px;"></i>
+      </a>
+      <a class="icon-btn" href="/response.html" title="Response">
+        <i class="fa-solid fa-terminal" style="font-size:10px;"></i>
+      </a>
       <button class="icon-btn" id="downloadJsonBtn" title="Download loaded videos as JSON" style="cursor:pointer;">
         <i class="fa-solid fa-download" style="font-size:10px;"></i>
       </button>
@@ -511,6 +516,17 @@
     return m + ':' + String(s).padStart(2, '0');
   }
 
+  function countryFlag(code) {
+    if (!code || typeof code !== 'string' || code.length !== 2) {
+      return '';
+    }
+    var cc = code.toUpperCase();
+    var A = 0x1F1E6;
+    var a = 'A'.charCodeAt(0);
+    return String.fromCodePoint(A + (cc.charCodeAt(0) - a)) +
+           String.fromCodePoint(A + (cc.charCodeAt(1) - a));
+  }
+
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     load();
@@ -563,7 +579,7 @@
       for (var i = 0; i < videos.length; i++) {
         allVideos.push(videos[i]);
       }
-      renderProfile(videos[0].author, videos[0].region);
+      renderProfile(videos.length ? videos[0].author : null, videos.length ? videos[0].region : null);
       render(videos);
 
       setStatus('Loaded ' + videos.length + ' videos from ' + url, 'success');
@@ -577,17 +593,6 @@
       loading = false;
       submitBtn.disabled = false;
     }
-  }
-
-  function countryFlag(code) {
-    if (!code || typeof code !== 'string' || code.length !== 2) {
-      return '';
-    }
-    var cc = code.toUpperCase();
-    var A = 0x1F1E6;
-    var a = 'A'.charCodeAt(0);
-    return String.fromCodePoint(A + (cc.charCodeAt(0) - a)) +
-           String.fromCodePoint(A + (cc.charCodeAt(1) - a));
   }
 
   function renderProfile(author, region) {
@@ -615,9 +620,8 @@
       avatarEl.removeAttribute('src');
     }
 
-    var flag = countryFlag(region);
-    flagEl.textContent = flag;
-    flagEl.title = region ? region.toUpperCase() : '';
+    flagEl.textContent = countryFlag(region);
+    flagEl.title = region ? String(region).toUpperCase() : '';
 
     card.hidden = false;
   }
