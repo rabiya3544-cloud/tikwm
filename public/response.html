@@ -40,10 +40,13 @@
 
   /* Header */
   header {
+    flex-shrink: 0;
+    padding: 10px 10px 8px;
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    gap: 8px;
   }
   header h1 {
     margin: 0;
@@ -61,6 +64,13 @@
     background: var(--accent);
     box-shadow: 0 0 10px var(--accent);
   }
+  header .nav { display: flex; align-items: center; gap: 6px; }
+  header .tag {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
   header .icon-btn {
     font-size: 10px;
     color: var(--muted);
@@ -73,6 +83,7 @@
     background: var(--panel);
   }
   header .icon-btn:hover { color: var(--text); border-color: var(--muted); }
+
 
   /* Form */
   form {
