@@ -10,6 +10,12 @@
   --ok: #4ade80;
   --err: #ff5c7a;
   --radius: 8px;
+  /* syntax (from response.css) */
+  --k-key:  #ff8ea3;
+  --k-str:  #8be9a0;
+  --k-num:  #ffb86b;
+  --k-bool: #7cc7ff;
+  --k-null: #85858f;
 }
 * { box-sizing: border-box; }
 html { height: 100%; }
@@ -32,6 +38,8 @@ body {
   margin: 0 auto;
   overflow: hidden;
 }
+/* response.css wrapper — useful when the page isn't using the flex body layout */
+.app { max-width: 720px; margin: 0 auto; padding: 10px 10px 24px; }
 
 header {
   flex-shrink: 0;
@@ -416,3 +424,94 @@ footer {
   flex-shrink: 0;
 }
 .profile-flag:empty { display: none; }
+
+/* =========================================================
+   From response.css — JSON / code viewer UI
+   ========================================================= */
+
+/* Key chips */
+#keys {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+#keys span {
+  font-size: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+#keys:empty { display: none; }
+
+/* Code panel */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+}
+.panel-title {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.panel-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.panel-actions button {
+  width: auto;
+  font-size: 10px;
+  padding: 3px 8px;
+  cursor: pointer;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  letter-spacing: 0.03em;
+}
+.panel-actions button:hover { color: var(--text); border-color: var(--muted); }
+.panel-actions button.accent {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+.panel-actions button.accent:hover { background: var(--accent-2); border-color: var(--accent-2); }
+
+pre {
+  margin: 0;
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  tab-size: 2;
+  white-space: pre;
+  overflow: auto;
+  max-height: 62vh;
+  -webkit-overflow-scrolling: touch;
+}
+pre::-webkit-scrollbar { width: 8px; height: 8px; }
+pre::-webkit-scrollbar-thumb { background: #2e2e3a; border-radius: 4px; }
+pre::-webkit-scrollbar-track { background: transparent; }
+
+/* Syntax highlighting */
+.k-key  { color: var(--k-key); }
+.k-str  { color: var(--k-str); }
+.k-num  { color: var(--k-num); }
+.k-bool { color: var(--k-bool); }
+.k-null { color: var(--k-null); }
