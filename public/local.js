@@ -213,7 +213,6 @@
               '<span><i class="fa-regular fa-calendar"></i>' + date + '</span>' +
               '<span><i class="fa-solid fa-hard-drive"></i>' + size + '</span>' +
             '</div>' +
-            (music ? '<div class="audio" title="' + music + '"><i class="fa-solid fa-music"></i><span>' + music + '</span></div>' : '') +
           '</div>' +
         '</article>';
     }).join('');
