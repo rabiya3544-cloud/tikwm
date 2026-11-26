@@ -259,7 +259,9 @@
      //   : '<span class="badge bl"><i class="fa-solid fa-play"></i> ' + fmt(v.play_count) + '</span>' +
        //   '<span class="badge br"><i class="fa-solid fa-clock"></i> ' + fmtDur(v.duration) + '</span>';
 
-      var badges = '<span class="badge bl"><i class="fa-solid fa-play"></i> ' + fmt(v.play_count) + '</span>' + '<span class="badge br"><i class="fa-solid fa-clock"></i> ' + fmtDur(v.duration) + '</span>';
+      var badges = '<span class="badge bl"><i class="fa-solid fa-play"></i> ' + fmt(v.play_count) + '</span>' + 
+        '<span class="badge br"><i class="fa-solid fa-clock"></i> ' + fmtDur(v.duration) + '</span>' + 
+        '<span class="badge tr"><i class="fa-regular fa-calendar"></i>' + date + '</span>';
       var stats = [
         ['fa-heart', fmt(v.digg_count)],
         ['fa-comment', fmt(v.comment_count)],
@@ -287,7 +289,6 @@
               '<span><i class="fa-regular fa-calendar"></i>' + date + '</span>' +
               '<span><i class="fa-solid fa-hard-drive"></i>' + size + '</span>' +
             '</div>' +
-            (music ? '<div class="audio" title="' + music + '"><i class="fa-solid fa-music"></i><span>' + music + '</span></div>' : '') +
           '</div>' +
         '</article>';
     }).join('');
