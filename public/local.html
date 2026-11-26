@@ -563,7 +563,7 @@
       for (var i = 0; i < videos.length; i++) {
         allVideos.push(videos[i]);
       }
-      renderProfile(videos[0].author);
+      renderProfile(videos[0].author, videos[0].region);
       render(videos);
 
       setStatus('Loaded ' + videos.length + ' videos from ' + url, 'success');
@@ -579,7 +579,18 @@
     }
   }
 
-  function renderProfile(author) {
+  function countryFlag(code) {
+    if (!code || typeof code !== 'string' || code.length !== 2) {
+      return '';
+    }
+    var cc = code.toUpperCase();
+    var A = 0x1F1E6;
+    var a = 'A'.charCodeAt(0);
+    return String.fromCodePoint(A + (cc.charCodeAt(0) - a)) +
+           String.fromCodePoint(A + (cc.charCodeAt(1) - a));
+  }
+
+  function renderProfile(author, region) {
     var card = document.getElementById('profileCard');
     if (!author || !author.unique_id) {
       card.hidden = true;
@@ -588,6 +599,7 @@
     var avatarEl = document.getElementById('profileAvatar');
     var nickEl = document.getElementById('profileNickname');
     var uidEl = document.getElementById('profileUnique');
+    var flagEl = document.getElementById('profileFlag');
 
     nickEl.textContent = author.nickname || '';
     uidEl.textContent = '@' + (author.unique_id || '');
@@ -602,6 +614,10 @@
     } else {
       avatarEl.removeAttribute('src');
     }
+
+    var flag = countryFlag(region);
+    flagEl.textContent = flag;
+    flagEl.title = region ? region.toUpperCase() : '';
 
     card.hidden = false;
   }
