@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>TikWM Proxy</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
+  :root {
+    --bg: #0a0a0e;
+    --panel: #131318;
+    --panel-2: #1a1a22;
+    --border: #26262f;
+    --text: #e9e9ef;
+    --muted: #85858f;
+    --accent: #ff2d55;
+    --accent-2: #ff5c7a;
+    --ok: #4ade80;
+    --err: #ff5c7a;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; }
+  html { height: 100%; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 13px;
+    line-height: 1.35;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    max-width: 720px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  header {
+    flex-shrink: 0;
+    padding: 10px 10px 8px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  header h1::before {
+    content: "";
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 10px var(--accent);
+  }
+  header .nav { display: flex; align-items: center; gap: 6px; }
+  header .tag {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  header .icon-btn {
+    font-size: 10px;
+    color: var(--muted);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 3px 7px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    background: var(--panel);
+  }
+  header .icon-btn:hover { color: var(--text); border-color: var(--muted); }
+
+  main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  form {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px;
+    display: grid;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  .field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+  .field[hidden] { display: none; }
+  label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-weight: 500;
+  }
+  input, select, button {
+    font: inherit;
+    font-size: 12px;
+    background: var(--panel-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.12s, background 0.12s;
+    min-width: 0;
+  }
+  select { appearance: none; -webkit-appearance: none; padding-right: 22px; }
+  select {
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+                      linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 12px) 50%, calc(100% - 8px) 50%;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+  }
+  input::placeholder { color: #565660; }
+  input:focus, select:focus { border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+  button.primary:hover { background: var(--accent-2); }
+  button.primary:disabled { opacity: 0.55; cursor: not-allowed; }
+
+  button.ghost {
+    background: transparent;
+    color: var(--muted);
+    border: 1px dashed var(--border);
+    padding: 8px;
+    font-size: 11px;
+    cursor: pointer;
+    width: 100%;
+    letter-spacing: 0.02em;
+  }
+  button.ghost:hover { color: var(--text); border-color: var(--muted); }
+  button.ghost[hidden] { display: none; }
+  button.ghost:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  #status {
+    font-size: 11px;
+    margin: 0 2px;
+    min-height: 14px;
+    color: var(--muted);
+    word-break: break-word;
+    flex-shrink: 0;
+  }
+  #status.error   { color: var(--err); }
+  #status.success { color: var(--ok); }
+
+  #results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 8px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.12s, border-color 0.12s;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .card:hover { border-color: #3a3a48; transform: translateY(-1px); }
+  .thumb {
+    position: relative;
+    aspect-ratio: 9 / 16;
+    background: #000;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .badge {
+    position: absolute;
+    font-size: 9.5px;
+    font-weight: 500;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: rgba(0,0,0,0.72);
+    color: #fff;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+  .badge i { font-size: 8px; }
+  .badge.bl { left: 5px; bottom: 5px; }
+  .badge.br { right: 5px; bottom: 5px; }
+
+  .meta {
+    padding: 6px 7px 7px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .title {
+    margin: 0;
+    font-size: 10.5px;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    color: var(--text);
+    min-height: 2.6em;
+  }
+  .author {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9.5px;
+    color: var(--muted);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .avatar {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--muted);
+    flex-shrink: 0;
+    text-transform: uppercase;
+  }
+  .author .handle {
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .author .nickname {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .stat { display: inline-flex; align-items: center; gap: 2px; }
+  .stat i { font-size: 8px; }
+
+  .meta-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 4px;
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .meta-line span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-width: 0;
+  }
+  .meta-line i { font-size: 8px; }
+
+  .audio {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 9px;
+    color: var(--muted);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .audio i { flex-shrink: 0; font-size: 8px; }
+  .audio span { overflow: hidden; text-overflow: ellipsis; }
+
+  footer {
+    flex-shrink: 0;
+    padding: 8px 10px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #debug {
+    font-size: 9.5px;
+    color: #555;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .modal {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 12px;
+    backdrop-filter: blur(6px);
+  }
+  .modal.open { display: flex; }
+  .modal video {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+    background: #000;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  }
+  .modal .close {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal .close:hover { background: rgba(255,255,255,0.22); }
+
+  .profile-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .profile-card[hidden] { display: none; }
+  .profile-avatar {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .profile-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+  .profile-nickname {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .profile-unique {
+    font-size: 10.5px;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .profile-flag {
+    margin-left: auto;
+    font-size: 22px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .profile-flag:empty { display: none; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>TikWM Proxy</h1>
+    <div class="nav">
+      <span class="tag">v2</span>
+      <a class="icon-btn" href="/response.html">Response</a>
+      <button class="icon-btn" id="downloadJsonBtn" title="Download all responses as JSON" style="cursor:pointer;">
+        <i class="fa-solid fa-download" style="font-size:10px;"></i>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <form id="form" autocomplete="off">
+      <div class="field">
+        <label for="unique_id">Unique ID</label>
+        <input id="unique_id" value="@tiktok" spellcheck="false" />
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label for="endpoint">Endpoint</label>
+          <select id="endpoint">
+            <option value="posts">Posts</option>
+            <option value="story">Story</option>
+            <option value="search">Search</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="count">Count</label>
+          <input id="count" type="number" value="12" min="1" max="50" />
+        </div>
+      </div>
+
+      <div class="field" id="keywordsField" hidden>
+        <label for="keywords">Keywords</label>
+        <input id="keywords" value="cosplay" spellcheck="false" />
+      </div>
+
+      <div class="field">
+        <label for="cursor">Cursor <span style="text-transform:none;color:#565660;">(optional)</span></label>
+        <input id="cursor" placeholder="default" />
+      </div>
+
+      <button type="submit" class="primary" id="submitBtn">Fetch</button>
+    </form>
+
+    <div id="status"></div>
+    <div id="profileCard" class="profile-card" hidden>
+      <img class="profile-avatar" id="profileAvatar" alt="" />
+      <div class="profile-info">
+        <div class="profile-nickname" id="profileNickname"></div>
+        <div class="profile-unique" id="profileUnique"></div>
+      </div>
+      <div class="profile-flag" id="profileFlag"></div>
+    </div>
+    <div id="results"></div>
+  </main>
+
+  <footer>
+    <div id="debug">cursor: — · hasMore: false · loading: false</div>
+    <button class="ghost" id="loadMore" hidden>Load more</button>
+  </footer>
+
+  <div class="modal" id="playerModal">
+    <button class="close" id="playerClose" aria-label="Close">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+    <video id="player" playsinline controls></video>
+  </div>
+
+<script>
+(function () {
+  var PROXY = '/api/proxy';
+  var MEDIA = '/api/media?path=';
+  var $ = function (s) { return document.querySelector(s); };
+
+  var form = $('#form');
+  var endpointSel = $('#endpoint');
+  var keywordsFld = $('#keywordsField');
+  var submitBtn = $('#submitBtn');
+  var statusEl = $('#status');
+  var resultsEl = $('#results');
+  var loadMoreBtn = $('#loadMore');
+  var debugEl = $('#debug');
+  var modal = $('#playerModal');
+  var player = $('#player');
+  var downloadBtn = $('#downloadJsonBtn');
+
+  var state = { cursor: '', hasMore: false, params: null, loading: false };
+  var allFetchedVideos = [];
+
+  function fix(url) {
+    if (!url) { return ''; }
+    if (/^https?:\/\//i.test(url)) { return url; }
+    if (url.indexOf('/video/') !== 0) { return url; }
+    return MEDIA + encodeURIComponent(url);
+  }
+
+  function setStatus(msg, type) {
+    statusEl.textContent = msg || '';
+    statusEl.className = type || '';
+  }
+
+  function esc(s) {
+    var out = String(s);
+    out = out.split('&').join('&amp;');
+    out = out.split('<').join('&lt;');
+    out = out.split('>').join('&gt;');
+    out = out.split('"').join('&quot;');
+    out = out.split("'").join('&#39;');
+    return out;
+  }
+
+  function fmt(n) {
+    n = Number(n) || 0;
+    if (n >= 1e9) { return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B'; }
+    if (n >= 1e6) { return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M'; }
+    if (n >= 1e3) { return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K'; }
+    return String(n);
+  }
+
+  function fmtDur(sec) {
+    sec = Math.max(0, Math.round(Number(sec) || 0));
+    if (sec === 0) { return '—'; }
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  function countryFlag(code) {
+    if (!code || typeof code !== 'string' || code.length !== 2) {
+      return '';
+    }
+    var cc = code.toUpperCase();
+    var A = 0x1F1E6;
+    var a = 'A'.charCodeAt(0);
+    return String.fromCodePoint(A + (cc.charCodeAt(0) - a)) +
+           String.fromCodePoint(A + (cc.charCodeAt(1) - a));
+  }
+
+  endpointSel.addEventListener('change', function () {
+    keywordsFld.hidden = endpointSel.value !== 'search';
+  });
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    run({ append: false });
+  });
+
+  loadMoreBtn.addEventListener('click', function () {
+    if (!state.params) {
+      setStatus('No previous fetch — click Fetch first.', 'error');
+      return;
+    }
+    if (state.loading) {
+      setStatus('Already loading, wait…', 'error');
+      return;
+    }
+    if (!state.cursor) {
+      setStatus('API returned no cursor — nothing more to load.', 'error');
+      return;
+    }
+    run({ append: true });
+  });
+
+  function updateDebug() {
+    debugEl.textContent =
+      'cursor: ' + (state.cursor || '—') +
+      ' · hasMore: ' + state.hasMore +
+      ' · loading: ' + state.loading;
+  }
+
+  async function run(opts) {
+    var append = opts.append;
+    if (state.loading) { return; }
+
+    var unique_id = $('#unique_id').value.trim();
+    var endpoint = endpointSel.value;
+    var keywords = $('#keywords').value.trim();
+    var count = $('#count').value.trim();
+    var rawCursor = $('#cursor').value.trim();
+
+    if (!unique_id) {
+      setStatus('unique_id is required', 'error');
+      return;
+    }
+    if (endpoint === 'search' && !keywords) {
+      setStatus('keywords is required for search', 'error');
+      return;
+    }
+
+    var cursor;
+    if (append) {
+      cursor = String(state.cursor == null ? '' : state.cursor);
+      if (!cursor) {
+        setStatus('Cannot load more: cursor is empty.', 'error');
+        return;
+      }
+    } else {
+      cursor = rawCursor || undefined;
+    }
+
+    var params = new URLSearchParams({ unique_id: unique_id, endpoint: endpoint });
+    if (count) { params.set('count', count); }
+    if (cursor !== undefined && cursor !== '') { params.set('cursor', cursor); }
+    if (endpoint === 'search') { params.set('keywords', keywords); }
+
+    var url = PROXY + '?' + params.toString();
+    console.log('[Fetch ' + (append ? 'LOAD MORE' : 'FIRST') + ']', url);
+
+    state.loading = true;
+    submitBtn.disabled = true;
+    loadMoreBtn.disabled = true;
+    if (!append) {
+      resultsEl.innerHTML = '';
+      loadMoreBtn.hidden = true;
+      allFetchedVideos.length = 0;
+    }
+    setStatus(append ? 'Loading more…' : 'Loading…', '');
+    updateDebug();
+
+    try {
+      var res = await fetch(url);
+      var json = await res.json();
+
+      if (!res.ok || json.error) {
+        throw new Error(json.error || json.details || ('HTTP ' + res.status));
+      }
+      if (json.code !== 0) {
+        throw new Error(json.msg || 'API returned non-zero code');
+      }
+
+      var videos = (json.data && json.data.videos) || [];
+      var data = json.data || {};
+
+      for (var i = 0; i < videos.length; i++) {
+        allFetchedVideos.push(videos[i]);
+      }
+      if (!append) {
+        renderProfile(videos.length ? videos[0].author : null, videos.length ? videos[0].region : null);
+      }
+
+      state.params = params;
+      state.cursor = data.cursor != null ? String(data.cursor) : '';
+      state.hasMore = !!data.hasMore;
+
+      $('#cursor').value = state.cursor;
+
+      if (!videos.length) {
+        setStatus(append ? 'No more results' : 'No results', 'error');
+        state.hasMore = false;
+      } else {
+        render(videos, append);
+        setStatus(
+          (append ? 'Loaded more ' : 'Loaded ') + videos.length + ' • ' +
+          'cursor ' + (state.cursor || '-') + ' • hasMore ' + state.hasMore,
+          'success'
+        );
+      }
+
+      loadMoreBtn.hidden = !state.hasMore;
+      if (state.hasMore) {
+        loadMoreBtn.textContent =
+          'Load more · cursor ' + state.cursor.slice(0, 6) + '…';
+      }
+    } catch (err) {
+      console.error('[Fetch Error]', err);
+      setStatus(err.message || 'Request failed', 'error');
+    } finally {
+      state.loading = false;
+      submitBtn.disabled = false;
+      loadMoreBtn.disabled = false;
+      updateDebug();
+    }
+  }
+
+  function renderProfile(author, region) {
+    var card = document.getElementById('profileCard');
+    if (!author || !author.unique_id) {
+      card.hidden = true;
+      return;
+    }
+    var avatarEl = document.getElementById('profileAvatar');
+    var nickEl = document.getElementById('profileNickname');
+    var uidEl = document.getElementById('profileUnique');
+    var flagEl = document.getElementById('profileFlag');
+
+    nickEl.textContent = author.nickname || '';
+    uidEl.textContent = '@' + (author.unique_id || '');
+
+    var avatarUrl = fix(author.avatar || '');
+    if (avatarUrl) {
+      avatarEl.src = avatarUrl;
+      avatarEl.onerror = function () {
+        avatarEl.style.opacity = '0.15';
+      };
+      avatarEl.style.opacity = '';
+    } else {
+      avatarEl.removeAttribute('src');
+    }
+
+    var flag = countryFlag(region);
+    flagEl.textContent = flag;
+    flagEl.title = region ? String(region).toUpperCase() : '';
+
+    card.hidden = false;
+  }
+
+  function render(videos, append) {
+    var html = videos.map(function (v) {
+      var isPhoto = Array.isArray(v.images) && v.images.length > 0;
+      var cover = fix(v.cover || '');
+      var play = fix(v.play || v.wmplay || '');
+      var images = isPhoto ? v.images.map(fix) : [];
+
+      var title = esc(v.title || '');
+      var author = esc(v.author && v.author.unique_id ? v.author.unique_id : '');
+      var nickname = esc(v.author && v.author.nickname ? v.author.nickname : '');
+      var music = esc(v.music_info && v.music_info.title ? v.music_info.title : '');
+      var initial = (v.author && v.author.unique_id ? v.author.unique_id : '?').charAt(0).toUpperCase();
+
+      var date = v.create_time
+        ? new Date(v.create_time * 1000).toLocaleDateString(undefined, {
+            month: 'short',
+            day: 'numeric',
+          })
+        : '—';
+      var size = v.size > 0 ? (v.size / 1048576).toFixed(1) + ' MB' : '—';
+
+      var badges = isPhoto
+        ? '<span class="badge bl"><i class="fa-solid fa-layer-group"></i> ' + images.length + '</span>'
+        : '<span class="badge bl"><i class="fa-solid fa-play"></i> ' + fmt(v.play_count) + '</span>' +
+          '<span class="badge br"><i class="fa-solid fa-clock"></i> ' + fmtDur(v.duration) + '</span>';
+
+      var stats = [
+        ['fa-heart', fmt(v.digg_count)],
+        ['fa-comment', fmt(v.comment_count)],
+        ['fa-share', fmt(v.share_count)],
+        ['fa-download', fmt(v.download_count)],
+        ['fa-bookmark', fmt(v.collect_count)],
+      ].map(function (pair) {
+        return '<span class="stat"><i class="fa-solid ' + pair[0] + '"></i>' + pair[1] + '</span>';
+      }).join('');
+
+      var mediaUrl = play || images[0] || '';
+      var mediaType = play ? 'video' : (images.length ? 'image' : '');
+      var imgList = isPhoto ? JSON.stringify(images) : '';
+
+      return '' +
+        '<article class="card" data-type="' + mediaType + '" data-src="' + esc(mediaUrl) + '" data-imgs="' + esc(imgList) + '">' +
+          '<div class="thumb">' +
+            '<img loading="lazy" src="' + esc(cover) + '" alt="" onerror="this.style.opacity=0.15" />' +
+            badges +
+          '</div>' +
+          '<div class="meta">' +
+            '<p class="title">' + (title || '&nbsp;') + '</p>' +
+            '<div class="author">' +
+              '<span class="avatar">' + esc(initial) + '</span>' +
+              '<span class="handle">@' + (author || 'unknown') + '</span>' +
+              (nickname ? '<span class="nickname">· ' + nickname + '</span>' : '') +
+            '</div>' +
+            '<div class="stats">' + stats + '</div>' +
+            '<div class="meta-line">' +
+              '<span><i class="fa-regular fa-calendar"></i>' + date + '</span>' +
+              '<span><i class="fa-solid fa-hard-drive"></i>' + size + '</span>' +
+            '</div>' +
+            (music ? '<div class="audio" title="' + music + '"><i class="fa-solid fa-music"></i><span>' + music + '</span></div>' : '') +
+          '</div>' +
+        '</article>';
+    }).join('');
+
+    if (append) {
+      resultsEl.insertAdjacentHTML('beforeend', html);
+    } else {
+      resultsEl.innerHTML = html;
+    }
+  }
+
+  resultsEl.addEventListener('click', function (e) {
+    var card = e.target.closest('.card');
+    if (!card) { return; }
+    var type = card.dataset.type;
+    var src = card.dataset.src;
+    if (type === 'video' && src) { openVideo(src); }
+    else if (type === 'image' && src) { openImages(src, card.dataset.imgs); }
+  });
+
+  function openVideo(url) {
+    player.src = url;
+    player.style.display = '';
+    modal.classList.add('open');
+    var p = player.play();
+    if (p && p.catch) { p.catch(function () {}); }
+  }
+
+  function openImages(firstUrl, listJson) {
+    var list = [];
+    try { list = JSON.parse(listJson || '[]'); } catch (e) {}
+    if (!list.length) { list = [firstUrl]; }
+
+    player.removeAttribute('src');
+    player.pause();
+
+    var overlay = document.createElement('img');
+    overlay.src = list[0];
+    overlay.alt = '';
+    overlay.id = 'imageOverlay';
+    overlay.style.cssText =
+      'max-width:100%;max-height:100%;border-radius:8px;object-fit:contain;cursor:pointer;';
+    overlay.dataset.idx = '0';
+    overlay.dataset.list = JSON.stringify(list);
+    overlay.addEventListener('click', function () {
+      var arr = JSON.parse(overlay.dataset.list);
+      var next = (Number(overlay.dataset.idx) + 1) % arr.length;
+      overlay.dataset.idx = String(next);
+      overlay.src = arr[next];
+    });
+
+    player.style.display = 'none';
+    modal.appendChild(overlay);
+    modal.classList.add('open');
+  }
+
+  function closePlayer() {
+    player.pause();
+    player.removeAttribute('src');
+    player.load();
+    player.style.display = '';
+    var img = document.getElementById('imageOverlay');
+    if (img) { img.remove(); }
+    modal.classList.remove('open');
+  }
+
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal || e.target.closest('#playerClose')) { closePlayer(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && modal.classList.contains('open')) { closePlayer(); }
+  });
+
+  downloadBtn.addEventListener('click', function () {
+    if (allFetchedVideos.length === 0) {
+      setStatus('Nothing to download — fetch something first.', 'error');
+      return;
+    }
+    var payload = {
+      exported_at: new Date().toISOString(),
+      total: allFetchedVideos.length,
+      videos: allFetchedVideos,
+    };
+    var name = ($('#unique_id').value.trim().replace(/^@/, '') || 'responses') + '.json';
+    var blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus('Downloaded ' + allFetchedVideos.length + ' videos.', 'success');
+  });
+})();
+</script>
+</body>
+</html>
