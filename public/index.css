@@ -34,7 +34,6 @@
     overflow: hidden;
   }
 
-  /* ---------- Header ---------- */
   header {
     flex-shrink: 0;
     padding: 10px 10px 8px;
@@ -60,11 +59,7 @@
     background: var(--accent);
     box-shadow: 0 0 10px var(--accent);
   }
-  header .nav {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+  header .nav { display: flex; align-items: center; gap: 6px; }
   header .tag {
     font-size: 10px;
     color: var(--muted);
@@ -84,7 +79,6 @@
   }
   header .icon-btn:hover { color: var(--text); border-color: var(--muted); }
 
-  /* ---------- Main (scrollable) ---------- */
   main {
     flex: 1;
     min-height: 0;
@@ -96,7 +90,6 @@
     gap: 10px;
   }
 
-  /* Form */
   form {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -167,7 +160,6 @@
   button.ghost[hidden] { display: none; }
   button.ghost:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  /* Status */
   #status {
     font-size: 11px;
     margin: 0 2px;
@@ -179,7 +171,6 @@
   #status.error   { color: var(--err); }
   #status.success { color: var(--ok); }
 
-  /* ---------- Grid ---------- */
   #results {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
@@ -291,11 +282,7 @@
     font-size: 9px;
     color: var(--muted);
   }
-  .stat {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-  }
+  .stat { display: inline-flex; align-items: center; gap: 2px; }
   .stat i { font-size: 8px; }
 
   .meta-line {
@@ -326,7 +313,6 @@
   .audio i { flex-shrink: 0; font-size: 8px; }
   .audio span { overflow: hidden; text-overflow: ellipsis; }
 
-  /* ---------- Footer ---------- */
   footer {
     flex-shrink: 0;
     padding: 8px 10px;
@@ -344,7 +330,6 @@
     white-space: nowrap;
   }
 
-  /* ---------- Modal ---------- */
   .modal {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.88);
@@ -378,7 +363,7 @@
     justify-content: center;
   }
   .modal .close:hover { background: rgba(255,255,255,0.22); }
-  /* ---------- Profile Card ---------- */
+
   .profile-card {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -414,7 +399,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-.profile-flag {
+  .profile-flag {
     margin-left: auto;
     font-size: 22px;
     line-height: 1;
