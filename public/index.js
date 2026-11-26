@@ -103,7 +103,7 @@
     var append = opts.append;
     if (state.loading) { return; }
 
-    var unique_id = $('#unique_id').value.trim();
+    var unique_id = $('#unique_id').value.replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
     var endpoint = endpointSel.value;
     var keywords = $('#keywords').value.trim();
     var count = $('#count').value.trim();
