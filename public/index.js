@@ -129,12 +129,13 @@
       cursor = rawCursor || undefined;
     }
 
-    var params = new URLSearchParams({ unique_id: unique_id, endpoint: endpoint });
-    if (count) { params.set('count', count); }
-    if (cursor !== undefined && cursor !== '') { params.set('cursor', cursor); }
-    if (endpoint === 'search') { params.set('keywords', keywords); }
+    var qs = 'unique_id=' + encodeURIComponent(unique_id) +
+             '&endpoint=' + encodeURIComponent(endpoint);
+    if (count) { qs += '&count=' + encodeURIComponent(count); }
+    if (cursor !== undefined && cursor !== '') { qs += '&cursor=' + encodeURIComponent(cursor); }
+    if (endpoint === 'search') { qs += '&keywords=' + encodeURIComponent(keywords); }
 
-    var url = PROXY + '?' + params.toString();
+    var url = PROXY + '?' + qs;
     console.log('[Fetch ' + (append ? 'LOAD MORE' : 'FIRST') + ']', url);
 
     state.loading = true;
@@ -169,7 +170,7 @@
         renderProfile(videos.length ? videos[0].author : null, videos.length ? videos[0].region : null);
       }
 
-      state.params = params;
+      state.params = qs;
       state.cursor = data.cursor != null ? String(data.cursor) : '';
       state.hasMore = !!data.hasMore;
 
