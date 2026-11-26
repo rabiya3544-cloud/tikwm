@@ -183,7 +183,8 @@
       var badges = isPhoto
         ? '<span class="badge bl"><i class="fa-solid fa-layer-group"></i> ' + images.length + '</span>'
         : '<span class="badge bl"><i class="fa-solid fa-play"></i> ' + fmt(v.play_count) + '</span>' +
-          '<span class="badge br"><i class="fa-solid fa-clock"></i> ' + fmtDur(v.duration) + '</span>';
+          '<span class="badge br"><i class="fa-solid fa-clock"></i> ' + fmtDur(v.duration) + '</span>' +
+        '<span class="badge tr"><i class="fa-regular fa-calendar"></i>' + date + '</span>';
 
       var stats = [
         ['fa-heart', fmt(v.digg_count)],
